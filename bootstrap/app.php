@@ -10,8 +10,8 @@ use Illuminate\Foundation\Configuration\Middleware;
 |--------------------------------------------------------------------------
 |
 | The installer must boot on a completely fresh XAMPP checkout. Laravel's
-| web middleware can resolve the encrypter before the installer controller,
-| so APP_KEY must exist during the earliest bootstrap phase.
+| web middleware resolves the encrypter before the installer controller, so
+| APP_KEY must be valid during the earliest bootstrap phase.
 |
 */
 $basePath = dirname(__DIR__);
@@ -27,10 +27,24 @@ $appKey = null;
 
 if (file_exists($envPath)) {
     $environment = file_get_contents($envPath);
-    $hasUsableAppKey = preg_match('/^APP_KEY\s*=\s*(.+)$/m', $environment, $matches)
-        && trim($matches[1], " \t\"'") !== '';
 
-    if (! $hasUsableAppKey) {
+    $keyIsValid = false;
+    if (preg_match('/^APP_KEY\s*=\s*(.+)$/m', $environment, $matches)) {
+        $candidate = trim($matches[1], " \t\"'");
+
+        if (str_starts_with($candidate, 'base64,')) {
+            $decoded = base64_decode(substr($candidate, 7), true);
+            $keyIsValid = $decoded !== false && strlen($decoded) === 32;
+        } else {
+            $keyIsValid = strlen($candidate) === 32;
+        }
+
+        if ($keyIsValid) {
+            $appKey = $candidate;
+        }
+    }
+
+    if (! $keyIsValid) {
         $appKey = 'base64,'.base64_encode(random_bytes(32));
         $line = 'APP_KEY="'.$appKey.'"';
         $pattern = '/^APP_KEY\s*=.*$/m';
@@ -42,21 +56,18 @@ if (file_exists($envPath)) {
         }
 
         file_put_contents($envPath, $environment, LOCK_EX);
-    } else {
-        $appKey = trim($matches[1], " \t\"'");
     }
 }
 
 if ($appKey !== null && $appKey !== '') {
-    // Make the key available immediately, before Laravel loads configuration.
+    // Make the validated key available before Laravel loads configuration.
     putenv('APP_KEY='.$appKey);
     $_ENV['APP_KEY'] = $appKey;
     $_SERVER['APP_KEY'] = $appKey;
 }
 
 if ($appKey !== null && file_exists($configCachePath)) {
-    // A stale compiled config containing an empty app.key must not override
-    // the valid key above. Preserve valid compiled production configuration.
+    // Never allow a stale compiled config to override the valid environment key.
     $cachedConfig = @include $configCachePath;
 
     if (is_array($cachedConfig) && empty($cachedConfig['app']['key'])) {
