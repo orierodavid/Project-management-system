@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
-use App\Models\User;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateUser extends CreateRecord
@@ -12,14 +11,11 @@ class CreateUser extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $role = $this->data['roles'] ?? 'Staff';
-        $branches = $this->data['branches'] ?? [];
+        $state = $this->form->getRawState();
+        $role = $state['roles'] ?? 'Staff';
+        $branches = $state['branches'] ?? [];
 
         $this->record->syncRoles([$role]);
-        if ($branches) {
-            $this->record->branches()->sync($branches);
-        } elseif ($this->record->primary_branch_id) {
-            $this->record->branches()->sync([$this->record->primary_branch_id]);
-        }
+        $this->record->branches()->sync($branches ?: ($this->record->primary_branch_id ? [$this->record->primary_branch_id] : []));
     }
 }
