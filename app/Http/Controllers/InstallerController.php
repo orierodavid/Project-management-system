@@ -3,12 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use App\Models\User;
 use PDO;
 use Throwable;
 
@@ -126,6 +125,7 @@ class InstallerController extends Controller
             'APP_DEBUG' => 'true',
             'APP_URL' => rtrim($data['app_url'], '/'),
             'APP_TIMEZONE' => $data['timezone'],
+            'APP_KEY' => 'base64,'.base64_encode(random_bytes(32)),
             'DB_CONNECTION' => 'mysql',
             'DB_HOST' => $data['db_host'],
             'DB_PORT' => (string) $data['db_port'],
