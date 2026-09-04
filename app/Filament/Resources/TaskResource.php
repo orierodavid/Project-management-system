@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\TaskResource\RelationManagers\AttachmentsRelationManager;
+use App\Filament\Resources\TaskResource\RelationManagers\CommentsRelationManager;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Task;
@@ -103,6 +105,14 @@ class TaskResource extends Resource
             TextColumn::make('status')->badge(),
             TextColumn::make('deadline')->dateTime()->sortable(),
         ])->defaultSort('deadline');
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            CommentsRelationManager::class,
+            AttachmentsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
