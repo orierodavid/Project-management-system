@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AttendanceTest extends TestCase
@@ -15,7 +16,12 @@ class AttendanceTest extends TestCase
 
     private function makeUser(array $attributes = []): User
     {
-        return User::factory()->create($attributes);
+        return User::query()->create(array_merge([
+            'name' => 'Test User',
+            'email' => fake()->unique()->safeEmail(),
+            'password' => Hash::make('password'),
+            'status' => 'active',
+        ], $attributes));
     }
 
     private function makeBranch(array $attributes = []): Branch
