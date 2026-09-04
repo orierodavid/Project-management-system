@@ -9,13 +9,9 @@ use Illuminate\Foundation\Configuration\Middleware;
 | Fresh-install application bootstrap
 |--------------------------------------------------------------------------
 |
-| A fresh checkout must be able to boot before an APP_KEY exists. Laravel's
-| web middleware resolves the encrypter before the installer controller runs,
-| so the key must be established during the earliest bootstrap phase.
-|
-| We also remove a stale compiled config cache when we have to create the key.
-| Otherwise a previous cached configuration containing an empty APP_KEY can
-| continue to override the newly written .env value.
+| The installer must boot on a completely fresh XAMPP checkout. Laravel's
+| web middleware can resolve the encrypter before the installer controller,
+| so APP_KEY must exist during the earliest bootstrap phase.
 |
 */
 $basePath = dirname(__DIR__);
@@ -26,6 +22,8 @@ $configCachePath = $basePath.'/bootstrap/cache/config.php';
 if (! file_exists($envPath) && file_exists($envExamplePath)) {
     copy($envExamplePath, $envPath);
 }
+
+$appKey = null;
 
 if (file_exists($envPath)) {
     $environment = file_get_contents($envPath);
@@ -44,12 +42,25 @@ if (file_exists($envPath)) {
         }
 
         file_put_contents($envPath, $environment, LOCK_EX);
+    } else {
+        $appKey = trim($matches[1], " \t\"'");
+    }
+}
 
-        // A compiled config can contain an old empty app.key and override .env.
-        // Remove it only when we have just established a fresh application key.
-        if (file_exists($configCachePath)) {
-            @unlink($configCachePath);
-        }
+if ($appKey !== null && $appKey !== '') {
+    // Make the key available immediately, before Laravel loads configuration.
+    putenv('APP_KEY='.$appKey);
+    $_ENV['APP_KEY'] = $appKey;
+    $_SERVER['APP_KEY'] = $appKey;
+}
+
+if ($appKey !== null && file_exists($configCachePath)) {
+    // A stale compiled config containing an empty app.key must not override
+    // the valid key above. Preserve valid compiled production configuration.
+    $cachedConfig = @include $configCachePath;
+
+    if (is_array($cachedConfig) && empty($cachedConfig['app']['key'])) {
+        @unlink($configCachePath);
     }
 }
 
