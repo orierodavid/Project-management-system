@@ -6,19 +6,22 @@ use Illuminate\Foundation\Configuration\Middleware;
 
 /*
 |--------------------------------------------------------------------------
-| Fresh-install application key bootstrap
+| Fresh-install application bootstrap
 |--------------------------------------------------------------------------
 |
-| The web middleware can require Laravel's encrypter before the browser
-| installer controller gets a chance to create an APP_KEY. Ensure a local
-| .env file has a valid key before Laravel builds the application container.
-| This makes a fresh checkout/ZIP install work without requiring the user to
-| run `php artisan key:generate` first.
+| A fresh checkout must be able to boot before an APP_KEY exists. Laravel's
+| web middleware resolves the encrypter before the installer controller runs,
+| so the key must be established during the earliest bootstrap phase.
+|
+| We also remove a stale compiled config cache when we have to create the key.
+| Otherwise a previous cached configuration containing an empty APP_KEY can
+| continue to override the newly written .env value.
 |
 */
 $basePath = dirname(__DIR__);
 $envPath = $basePath.'/.env';
 $envExamplePath = $basePath.'/.env.example';
+$configCachePath = $basePath.'/bootstrap/cache/config.php';
 
 if (! file_exists($envPath) && file_exists($envExamplePath)) {
     copy($envExamplePath, $envPath);
@@ -40,7 +43,13 @@ if (file_exists($envPath)) {
             $environment = rtrim($environment).PHP_EOL.$line.PHP_EOL;
         }
 
-        file_put_contents($envPath, $environment);
+        file_put_contents($envPath, $environment, LOCK_EX);
+
+        // A compiled config can contain an old empty app.key and override .env.
+        // Remove it only when we have just established a fresh application key.
+        if (file_exists($configCachePath)) {
+            @unlink($configCachePath);
+        }
     }
 }
 
