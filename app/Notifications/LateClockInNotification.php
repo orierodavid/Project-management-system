@@ -4,10 +4,11 @@ namespace App\Notifications;
 
 use App\Models\AttendanceRecord;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class LateClockInNotification extends Notification
+class LateClockInNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
