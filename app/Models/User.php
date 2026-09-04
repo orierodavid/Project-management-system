@@ -11,11 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, LogsActivity;
 
     protected $fillable = [
         'name', 'email', 'password', 'phone', 'department_id', 'primary_branch_id', 'status',
@@ -29,6 +31,15 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('users')
+            ->logOnly(['name', 'email', 'phone', 'department_id', 'primary_branch_id', 'status'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     public function canAccessPanel(Panel $panel): bool
@@ -48,35 +59,12 @@ class User extends Authenticatable implements FilamentUser
         return false;
     }
 
-    public function department(): BelongsTo
-    {
-        return $this->belongsTo(Department::class);
-    }
-
-    public function primaryBranch(): BelongsTo
-    {
-        return $this->belongsTo(Branch::class, 'primary_branch_id');
-    }
-
-    public function branches(): BelongsToMany
-    {
-        return $this->belongsToMany(Branch::class, 'user_branches')->withTimestamps();
-    }
-
-    public function assignedTasks(): HasMany
-    {
-        return $this->hasMany(Task::class, 'assigned_to');
-    }
-
-    public function createdTasks(): HasMany
-    {
-        return $this->hasMany(Task::class, 'assigned_by');
-    }
-
-    public function attendanceRecords(): HasMany
-    {
-        return $this->hasMany(AttendanceRecord::class);
-    }
+    public function department(): BelongsTo { return $this->belongsTo(Department::class); }
+    public function primaryBranch(): BelongsTo { return $this->belongsTo(Branch::class, 'primary_branch_id'); }
+    public function branches(): BelongsToMany { return $this->belongsToMany(Branch::class, 'user_branches')->withTimestamps(); }
+    public function assignedTasks(): HasMany { return $this->hasMany(Task::class, 'assigned_to'); }
+    public function createdTasks(): HasMany { return $this->hasMany(Task::class, 'assigned_by'); }
+    public function attendanceRecords(): HasMany { return $this->hasMany(AttendanceRecord::class); }
 
     public function isActive(): bool
     {
