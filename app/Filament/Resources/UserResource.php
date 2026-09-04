@@ -14,7 +14,9 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
@@ -29,7 +31,8 @@ class UserResource extends Resource
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->can('manage-users') ?? false;
+        $user = auth()->user();
+        return (bool) ($user?->hasRole('Super Admin') || $user?->hasRole('Admin'));
     }
 
     public static function canEdit($record): bool
@@ -40,26 +43,65 @@ class UserResource extends Resource
             return false;
         }
 
-        return $user->hasRole('Super Admin') || ! $record->hasRole('Super Admin');
+        if ($user->hasRole('Super Admin')) {
+            return true;
+        }
+
+        if (! $user->hasRole('Admin') || ! $record->hasRole('Staff')) {
+            return false;
+        }
+
+        $branchIds = $user->branches()->pluck('branches.id');
+
+        return $record->branches()->whereIn('branches.id', $branchIds)->exists()
+            || $branchIds->contains($record->primary_branch_id);
     }
 
     public static function canDelete($record): bool
     {
         $user = auth()->user();
 
-        return (bool) ($user?->hasRole('Super Admin') && $user->id !== $record->id);
+        return (bool) ($user?->hasRole('Super Admin') && (int) $user->id !== (int) $record->id);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+        $query = parent::getEloquentQuery()->with(['department', 'primaryBranch', 'roles']);
+
+        if ($user?->hasRole('Admin')) {
+            $branchIds = $user->branches()->pluck('branches.id');
+
+            $query
+                ->whereHas('roles', fn (Builder $q) => $q->where('name', 'Staff'))
+                ->where(function (Builder $q) use ($branchIds): void {
+                    $q->whereIn('primary_branch_id', $branchIds)
+                        ->orWhereHas('branches', fn (Builder $q) => $q->whereIn('branches.id', $branchIds));
+                });
+        }
+
+        return $query;
     }
 
     public static function form(Form $form): Form
     {
-        $isSuperAdmin = auth()->user()?->hasRole('Super Admin') ?? false;
+        $actor = auth()->user();
+        $isSuperAdmin = (bool) $actor?->hasRole('Super Admin');
+        $branchIds = $actor?->branches()->pluck('branches.id')->all() ?? [];
+
+        $branchQuery = Branch::query()->where('is_active', true)->orderBy('name');
+
+        if (! $isSuperAdmin) {
+            $branchQuery->whereIn('id', $branchIds);
+        }
 
         return $form->schema([
             TextInput::make('name')->required()->maxLength(255),
             TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
             TextInput::make('phone')->tel()->maxLength(30),
             TextInput::make('password')
-                ->password()->revealable()
+                ->password()
+                ->revealable()
                 ->required(fn (string $operation): bool => $operation === 'create')
                 ->dehydrated(fn (?string $state): bool => filled($state))
                 ->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
@@ -69,20 +111,22 @@ class UserResource extends Resource
                 ->searchable()->preload(),
             Select::make('primary_branch_id')
                 ->label('Primary branch')
-                ->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                ->searchable()->preload(),
+                ->options($branchQuery->pluck('name', 'id'))
+                ->searchable()->preload()
+                ->required(),
             Select::make('status')
                 ->options(['active' => 'Active', 'suspended' => 'Suspended'])
                 ->required()->default('active'),
             Select::make('roles')
                 ->label('Role')
-                ->options(fn () => \Spatie\Permission\Models\Role::query()
-                    ->when(! $isSuperAdmin, fn ($query) => $query->whereIn('name', ['Admin', 'Staff']))
-                    ->orderBy('name')->pluck('name', 'name'))
+                ->options($isSuperAdmin
+                    ? Role::query()->orderBy('name')->pluck('name', 'name')
+                    : ['Staff' => 'Staff'])
                 ->required()->default('Staff')->dehydrated(false),
             Select::make('branches')
-                ->label('Branch access')->multiple()
-                ->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                ->label('Branch access')
+                ->multiple()
+                ->options($branchQuery->pluck('name', 'id'))
                 ->preload()->searchable()->dehydrated(false),
         ]);
     }
