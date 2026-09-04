@@ -10,11 +10,9 @@ use App\Models\Department;
 use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
 
@@ -29,18 +27,63 @@ class UserResource extends Resource
         return auth()->user()?->can('manage-users') ?? false;
     }
 
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('manage-users') ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+
+        if (! $user?->can('manage-users')) {
+            return false;
+        }
+
+        return $user->hasRole('Super Admin') || ! $record->hasRole('Super Admin');
+    }
+
+    public static function canDelete($record): bool
+    {
+        $user = auth()->user();
+
+        return (bool) ($user?->hasRole('Super Admin') && $user->id !== $record->id);
+    }
+
     public static function form(Form $form): Form
     {
+        $isSuperAdmin = auth()->user()?->hasRole('Super Admin') ?? false;
+
         return $form->schema([
             TextInput::make('name')->required()->maxLength(255),
             TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
             TextInput::make('phone')->tel()->maxLength(30),
-            TextInput::make('password')->password()->revealable()->required(fn (string $operation): bool => $operation === 'create')->dehydrated(fn (?string $state): bool => filled($state))->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
-            Select::make('department_id')->label('Department')->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload(),
-            Select::make('primary_branch_id')->label('Primary branch')->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload(),
-            Select::make('status')->options(['active' => 'Active', 'suspended' => 'Suspended'])->required()->default('active'),
-            Select::make('roles')->label('Role')->options(fn () => \Spatie\Permission\Models\Role::query()->orderBy('name')->pluck('name', 'name'))->required()->default('Staff')->dehydrated(false),
-            Select::make('branches')->label('Branch access')->multiple()->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->preload()->searchable()->dehydrated(false),
+            TextInput::make('password')
+                ->password()->revealable()
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->dehydrated(fn (?string $state): bool => filled($state))
+                ->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
+            Select::make('department_id')
+                ->label('Department')
+                ->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                ->searchable()->preload(),
+            Select::make('primary_branch_id')
+                ->label('Primary branch')
+                ->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                ->searchable()->preload(),
+            Select::make('status')
+                ->options(['active' => 'Active', 'suspended' => 'Suspended'])
+                ->required()->default('active'),
+            Select::make('roles')
+                ->label('Role')
+                ->options(fn () => \Spatie\Permission\Models\Role::query()
+                    ->when(! $isSuperAdmin, fn ($query) => $query->whereIn('name', ['Admin', 'Staff']))
+                    ->orderBy('name')->pluck('name', 'name'))
+                ->required()->default('Staff')->dehydrated(false),
+            Select::make('branches')
+                ->label('Branch access')->multiple()
+                ->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                ->preload()->searchable()->dehydrated(false),
         ]);
     }
 
