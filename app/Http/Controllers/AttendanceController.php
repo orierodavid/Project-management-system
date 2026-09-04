@@ -12,6 +12,20 @@ use Illuminate\Support\Carbon;
 
 class AttendanceController extends Controller
 {
+    public function status(Request $request): JsonResponse
+    {
+        $record = $request->user()->attendanceRecords()
+            ->with('branch')
+            ->whereNull('clock_out_at')
+            ->latest('clock_in_at')
+            ->first();
+
+        return response()->json([
+            'clocked_in' => (bool) $record,
+            'attendance' => $record,
+        ]);
+    }
+
     public function clockIn(Request $request, GeofenceService $geofence): JsonResponse
     {
         $data = $request->validate([
@@ -25,6 +39,7 @@ class AttendanceController extends Controller
 
         $branch = $user->primaryBranch;
         abort_unless($branch instanceof Branch && $branch->is_active, 422, 'You do not have an active primary branch assigned.');
+        abort_if($branch->latitude == 0.0 && $branch->longitude == 0.0, 422, 'Your assigned branch has not been configured with valid GPS coordinates.');
 
         if ($user->attendanceRecords()->whereNull('clock_out_at')->exists()) {
             return response()->json(['message' => 'You are already clocked in.'], 422);
@@ -71,6 +86,9 @@ class AttendanceController extends Controller
         abort_unless($record, 422, 'You do not have an open attendance session.');
 
         $branch = $record->branch;
+        abort_unless($branch instanceof Branch && $branch->is_active, 422, 'The historical attendance branch is no longer active.');
+        abort_if($branch->latitude == 0.0 && $branch->longitude == 0.0, 422, 'The historical attendance branch has invalid GPS coordinates.');
+
         $distance = $geofence->distanceFromBranch($branch, (float) $data['latitude'], (float) $data['longitude']);
 
         if ($distance > $branch->radius_meters) {
