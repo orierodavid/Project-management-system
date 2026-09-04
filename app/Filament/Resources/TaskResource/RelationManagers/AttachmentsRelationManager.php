@@ -10,6 +10,7 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class AttachmentsRelationManager extends RelationManager
 {
@@ -25,7 +26,8 @@ class AttachmentsRelationManager extends RelationManager
                 ->required()
                 ->maxSize(10240)
                 ->downloadable()
-                ->openable(),
+                ->openable()
+                ->storeFileNamesIn('original_name'),
         ]);
     }
 
@@ -46,12 +48,20 @@ class AttachmentsRelationManager extends RelationManager
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['uploaded_by'] = auth()->id();
                         $data['disk'] = 'public';
+                        $data['mime_type'] = isset($data['path']) ? Storage::disk('public')->mimeType($data['path']) : null;
+                        $data['size'] = isset($data['path']) ? Storage::disk('public')->size($data['path']) : null;
+
                         return $data;
                     }),
             ])
             ->actions([
                 DeleteAction::make()
-                    ->visible(fn (Model $record): bool => (bool) (auth()->user()?->can('manage-tasks') || (int) $record->uploaded_by === (int) auth()->id())),
+                    ->visible(fn (Model $record): bool => (bool) (auth()->user()?->can('manage-tasks') || (int) $record->uploaded_by === (int) auth()->id()))
+                    ->before(function (Model $record): void {
+                        if ($record->path && Storage::disk($record->disk)->exists($record->path)) {
+                            Storage::disk($record->disk)->delete($record->path);
+                        }
+                    }),
             ])
             ->defaultSort('created_at', 'desc');
     }
