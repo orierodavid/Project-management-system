@@ -78,7 +78,7 @@ class AttendanceReports extends Page implements HasForms
         ];
     }
 
-    public function getRecords(): [31marray[0m
+    public function getRecords(): array
     {
         return $this->query()->with(['user', 'branch'])->latest('clock_in_at')->get()->all();
     }
@@ -99,16 +99,12 @@ class AttendanceReports extends Page implements HasForms
     {
         $actor = auth()->user();
         $filters = $this->data;
-
         $query = AttendanceRecord::query();
 
         $from = ! empty($filters['from']) ? $filters['from'] : now()->startOfMonth()->toDateString();
         $to = ! empty($filters['to']) ? $filters['to'] : now()->toDateString();
 
-        $query->whereBetween('clock_in_at', [
-            $from . ' 00:00:00',
-            $to . ' 23:59:59',
-        ]);
+        $query->whereBetween('clock_in_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
 
         if ($actor?->hasRole('Admin')) {
             $branchIds = $actor->branches()->pluck('branches.id');
