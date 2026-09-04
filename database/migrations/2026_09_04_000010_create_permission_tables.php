@@ -30,16 +30,22 @@ return new class extends Migration {
             $table->string('name');
             $table->string('guard_name');
             $table->timestamps();
-            if ($teams) $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
-            else $table->unique(['name', 'guard_name']);
+            if ($teams) {
+                $table->unique([$columnNames['team_foreign_key'], 'name', 'guard_name']);
+            } else {
+                $table->unique(['name', 'guard_name']);
+            }
         });
 
-        Schema::create($tableNames['model_has_permissions'], function (Blueprint $table) use ($pivotPermission, $teams, $columnNames) {
+        Schema::create($tableNames['model_has_permissions'], function (Blueprint $table) use ($pivotPermission, $teams, $columnNames, $tableNames) {
             $table->unsignedBigInteger($pivotPermission);
             $table->string('model_type');
             $table->unsignedBigInteger($columnNames['model_morph_key']);
             $table->index([$columnNames['model_morph_key'], 'model_type']);
-            $table->foreign($pivotPermission)->references('id')->on($tableNames['permissions'])->onDelete('cascade');
+            $table->foreign($pivotPermission)
+                ->references('id')
+                ->on($tableNames['permissions'])
+                ->onDelete('cascade');
             if ($teams) {
                 $table->unsignedBigInteger($columnNames['team_foreign_key']);
                 $table->index($columnNames['team_foreign_key']);
@@ -49,12 +55,15 @@ return new class extends Migration {
             }
         });
 
-        Schema::create($tableNames['model_has_roles'], function (Blueprint $table) use ($pivotRole, $teams, $columnNames) {
+        Schema::create($tableNames['model_has_roles'], function (Blueprint $table) use ($pivotRole, $teams, $columnNames, $tableNames) {
             $table->unsignedBigInteger($pivotRole);
             $table->string('model_type');
             $table->unsignedBigInteger($columnNames['model_morph_key']);
             $table->index([$columnNames['model_morph_key'], 'model_type']);
-            $table->foreign($pivotRole)->references('id')->on($tableNames['roles'])->onDelete('cascade');
+            $table->foreign($pivotRole)
+                ->references('id')
+                ->on($tableNames['roles'])
+                ->onDelete('cascade');
             if ($teams) {
                 $table->unsignedBigInteger($columnNames['team_foreign_key']);
                 $table->index($columnNames['team_foreign_key']);
@@ -64,11 +73,17 @@ return new class extends Migration {
             }
         });
 
-        Schema::create($tableNames['role_has_permissions'], function (Blueprint $table) use ($pivotPermission, $pivotRole) {
+        Schema::create($tableNames['role_has_permissions'], function (Blueprint $table) use ($pivotPermission, $pivotRole, $tableNames) {
             $table->unsignedBigInteger($pivotPermission);
             $table->unsignedBigInteger($pivotRole);
-            $table->foreign($pivotPermission)->references('id')->on('permissions')->onDelete('cascade');
-            $table->foreign($pivotRole)->references('id')->on('roles')->onDelete('cascade');
+            $table->foreign($pivotPermission)
+                ->references('id')
+                ->on($tableNames['permissions'])
+                ->onDelete('cascade');
+            $table->foreign($pivotRole)
+                ->references('id')
+                ->on($tableNames['roles'])
+                ->onDelete('cascade');
             $table->primary([$pivotPermission, $pivotRole]);
         });
     }
@@ -76,7 +91,7 @@ return new class extends Migration {
     public function down(): void
     {
         $tables = config('permission.table_names');
-        foreach (['model_has_permissions','model_has_roles','role_has_permissions','roles','permissions'] as $table) {
+        foreach (['model_has_permissions', 'model_has_roles', 'role_has_permissions', 'roles', 'permissions'] as $table) {
             Schema::dropIfExists($tables[$table]);
         }
     }
