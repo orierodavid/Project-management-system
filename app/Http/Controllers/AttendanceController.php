@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AttendanceRecord;
 use App\Models\Branch;
 use App\Models\Setting;
+use App\Notifications\LateClockInNotification;
 use App\Services\GeofenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,6 +71,10 @@ class AttendanceController extends Controller
             'status' => $lateMinutes > 0 ? 'late' : 'on_time',
             'late_minutes' => $lateMinutes,
         ]);
+
+        if ($lateMinutes > 0) {
+            $user->notify(new LateClockInNotification($record));
+        }
 
         return response()->json(['message' => 'Clock-in successful.', 'attendance' => $record], 201);
     }
