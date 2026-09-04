@@ -10,9 +10,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class AttendanceExport implements FromCollection, WithHeadings, WithMapping
 {
-    public function __construct(private readonly Collection $records)
-    {
-    }
+    public function __construct(private readonly Collection $records) {}
 
     public function collection(): Collection
     {

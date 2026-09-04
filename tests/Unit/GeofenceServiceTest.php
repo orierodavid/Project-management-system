@@ -16,7 +16,7 @@ class GeofenceServiceTest extends TestCase
             'radius_meters' => 500,
         ]);
 
-        $service = new GeofenceService();
+        $service = new GeofenceService;
 
         $this->assertTrue($service->isWithinBranch($branch, 6.5248, 3.3795));
     }
@@ -29,7 +29,7 @@ class GeofenceServiceTest extends TestCase
             'radius_meters' => 100,
         ]);
 
-        $service = new GeofenceService();
+        $service = new GeofenceService;
 
         $this->assertFalse($service->isWithinBranch($branch, 6.5300, 3.3900));
     }

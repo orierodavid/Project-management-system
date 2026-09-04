@@ -20,8 +20,11 @@ class CompanySettings extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+
     protected static ?string $navigationGroup = 'System';
+
     protected static ?string $navigationLabel = 'Company Settings';
+
     protected static string $view = 'filament.pages.company-settings';
 
     public ?array $data = [];

@@ -24,12 +24,15 @@ use Illuminate\Database\Eloquent\Builder;
 class TaskResource extends Resource
 {
     protected static ?string $model = Task::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+
     protected static ?string $navigationGroup = 'Work Management';
 
     public static function canViewAny(): bool
     {
         $user = auth()->user();
+
         return (bool) ($user?->can('manage-tasks') || $user?->can('view-assigned-tasks'));
     }
 
@@ -56,6 +59,7 @@ class TaskResource extends Resource
     public static function canDelete($record): bool
     {
         $user = auth()->user();
+
         return (bool) ($user?->can('manage-tasks') && (! $user->hasRole('Admin') || static::recordIsWithinUserBranches($record, $user)));
     }
 

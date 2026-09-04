@@ -35,6 +35,13 @@ class AttendanceRecord extends Model
             ->dontSubmitEmptyLogs();
     }
 
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function branch(): BelongsTo { return $this->belongsTo(Branch::class); }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }

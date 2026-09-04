@@ -10,15 +10,17 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Validation\ValidationException;
 
 class BranchResource extends Resource
 {
     protected static ?string $model = Branch::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+
     protected static ?string $navigationGroup = 'Organization';
 
     public static function canViewAny(): bool
@@ -41,12 +43,14 @@ class BranchResource extends Resource
     public static function mutateFormDataBeforeCreate(array $data): array
     {
         static::validateCoordinates($data);
+
         return $data;
     }
 
     public static function mutateFormDataBeforeSave(array $data): array
     {
         static::validateCoordinates($data);
+
         return $data;
     }
 

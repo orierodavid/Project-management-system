@@ -28,6 +28,13 @@ class Department extends Model
             ->dontSubmitEmptyLogs();
     }
 
-    public function users(): HasMany { return $this->hasMany(User::class); }
-    public function tasks(): HasMany { return $this->hasMany(Task::class); }
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class);
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
 }

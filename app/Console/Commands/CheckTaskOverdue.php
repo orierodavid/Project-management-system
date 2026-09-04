@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class CheckTaskOverdue extends Command
 {
     protected $signature = 'tasks:check-overdue';
+
     protected $description = 'Mark overdue tasks and notify their assignees';
 
     public function handle(): int

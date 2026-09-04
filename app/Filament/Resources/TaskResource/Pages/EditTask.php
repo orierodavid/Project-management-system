@@ -14,6 +14,7 @@ class EditTask extends EditRecord
     protected static string $resource = TaskResource::class;
 
     protected ?string $previousStatus = null;
+
     protected ?int $previousAssignee = null;
 
     protected function beforeSave(): void

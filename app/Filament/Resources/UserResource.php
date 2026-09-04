@@ -21,7 +21,9 @@ use Spatie\Permission\Models\Role;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+
     protected static ?string $navigationGroup = 'Organization';
 
     public static function canViewAny(): bool
@@ -32,6 +34,7 @@ class UserResource extends Resource
     public static function canCreate(): bool
     {
         $user = auth()->user();
+
         return (bool) ($user?->hasRole('Super Admin') || $user?->hasRole('Admin'));
     }
 

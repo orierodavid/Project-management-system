@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\AttendanceRecord;
 use App\Models\Task;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;

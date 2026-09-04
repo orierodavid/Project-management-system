@@ -22,8 +22,11 @@ class AttendanceReports extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar-square';
+
     protected static ?string $navigationGroup = 'Reports';
+
     protected static ?string $navigationLabel = 'Attendance Reports';
+
     protected static string $view = 'filament.pages.attendance-reports';
 
     public ?array $data = [];
@@ -89,10 +92,11 @@ class AttendanceReports extends Page implements HasForms
 
         if ($records->isEmpty()) {
             Notification::make()->title('No attendance records found')->warning()->send();
+
             return null;
         }
 
-        return Excel::download(new AttendanceExport($records), 'attendance-report-' . now()->format('Y-m-d-His') . '.xlsx');
+        return Excel::download(new AttendanceExport($records), 'attendance-report-'.now()->format('Y-m-d-His').'.xlsx');
     }
 
     private function query(): Builder
@@ -104,7 +108,7 @@ class AttendanceReports extends Page implements HasForms
         $from = ! empty($filters['from']) ? $filters['from'] : now()->startOfMonth()->toDateString();
         $to = ! empty($filters['to']) ? $filters['to'] : now()->toDateString();
 
-        $query->whereBetween('clock_in_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+        $query->whereBetween('clock_in_at', [$from.' 00:00:00', $to.' 23:59:59']);
 
         if ($actor?->hasRole('Admin')) {
             $branchIds = $actor->branches()->pluck('branches.id');

@@ -11,6 +11,7 @@ use Illuminate\Notifications\DatabaseNotification;
 class CheckTaskDueSoon extends Command
 {
     protected $signature = 'tasks:check-due-soon';
+
     protected $description = 'Notify assignees about tasks approaching their deadlines';
 
     public function handle(): int

@@ -41,6 +41,7 @@ class CommentsRelationManager extends RelationManager
                     ->visible(fn (): bool => (bool) auth()->user()?->can('comment-on-tasks'))
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['user_id'] = auth()->id();
+
                         return $data;
                     }),
             ])
