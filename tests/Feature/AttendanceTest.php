@@ -7,6 +7,7 @@ use App\Models\Branch;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -40,6 +41,10 @@ class AttendanceTest extends TestCase
     {
         parent::setUp();
 
+        Carbon::setTestNow(
+            Carbon::create(2026, 1, 1, 8, 0, 0, 'Africa/Lagos')
+        );
+
         Setting::query()->create([
             'company_name' => 'Test Company',
             'primary_color' => '#2563EB',
@@ -50,6 +55,12 @@ class AttendanceTest extends TestCase
             'work_end_time' => '17:00:00',
             'task_due_soon_hours' => 24,
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     public function test_user_can_clock_in_inside_primary_branch_geofence(): void
