@@ -24,7 +24,24 @@ class TaskResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('manage-tasks') || auth()->user()?->can('view-assigned-tasks');
+        $user = auth()->user();
+        return (bool) ($user?->can('manage-tasks') || $user?->can('view-assigned-tasks'));
+    }
+
+    public static function canCreate(): bool
+    {
+        return (bool) auth()->user()?->can('manage-tasks');
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = auth()->user();
+        return (bool) ($user?->can('manage-tasks') || ($user?->can('update-own-tasks') && (int) $record->assigned_to === (int) $user->id));
+    }
+
+    public static function canDelete($record): bool
+    {
+        return (bool) auth()->user()?->can('manage-tasks');
     }
 
     public static function getEloquentQuery(): Builder
@@ -46,15 +63,33 @@ class TaskResource extends Resource
 
     public static function form(Form $form): Form
     {
+        $staff = auth()->user()?->hasRole('Staff');
+
         return $form->schema([
             TextInput::make('title')->required()->maxLength(255),
             RichEditor::make('description')->columnSpanFull(),
-            Select::make('department_id')->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload(),
-            Select::make('branch_id')->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload(),
-            Select::make('assigned_to')->label('Assignee')->options(User::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id'))->searchable()->preload(),
-            Select::make('priority')->options(['low' => 'Low', 'medium' => 'Medium', 'high' => 'High'])->required()->default('medium'),
-            Select::make('status')->options(['todo' => 'To do', 'in_progress' => 'In progress', 'review' => 'Review', 'done' => 'Done'])->required()->default('todo'),
-            DateTimePicker::make('deadline')->seconds(false)->native(false),
+            Select::make('department_id')
+                ->label('Department')
+                ->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                ->searchable()->preload()
+                ->disabled($staff),
+            Select::make('branch_id')
+                ->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                ->searchable()->preload()
+                ->disabled($staff),
+            Select::make('assigned_to')
+                ->label('Assignee')
+                ->options(User::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id'))
+                ->searchable()->preload()
+                ->disabled($staff),
+            Select::make('priority')
+                ->options(['low' => 'Low', 'medium' => 'Medium', 'high' => 'High'])
+                ->required()->default('medium')
+                ->disabled($staff),
+            Select::make('status')
+                ->options(['todo' => 'To do', 'in_progress' => 'In progress', 'review' => 'Review', 'done' => 'Done'])
+                ->required()->default('todo'),
+            DateTimePicker::make('deadline')->seconds(false)->native(false)->disabled($staff),
         ]);
     }
 
