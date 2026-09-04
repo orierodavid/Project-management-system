@@ -17,6 +17,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
@@ -167,6 +168,9 @@ class TaskResource extends Resource
                     ]),
                 TernaryFilter::make('is_overdue')
                     ->label('Overdue'),
+            ])
+            ->actions([
+                EditAction::make(),
             ])
             ->defaultSort('deadline');
     }
