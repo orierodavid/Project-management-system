@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AttendanceRecord;
 use App\Models\Branch;
 use App\Models\Setting;
 use App\Models\User;
@@ -24,6 +23,7 @@ class AttendanceController extends Controller
             ->first();
 
         return response()->json([
+            'success' => true,
             'clocked_in' => (bool) $record,
             'attendance' => $record,
         ]);
@@ -81,11 +81,15 @@ class AttendanceController extends Controller
         });
 
         if (($result['already_clocked_in'] ?? false) === true) {
-            return response()->json(['message' => 'You are already clocked in.'], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'You are already clocked in.',
+            ], 409);
         }
 
         if (($result['outside_geofence'] ?? false) === true) {
             return response()->json([
+                'success' => false,
                 'message' => 'Clock-in rejected. You are outside your assigned branch geofence.',
                 'distance_meters' => round($result['distance'], 2),
                 'allowed_radius_meters' => $result['radius'],
@@ -98,7 +102,11 @@ class AttendanceController extends Controller
             $user->notify(new LateClockInNotification($record));
         }
 
-        return response()->json(['message' => 'Clock-in successful.', 'attendance' => $record], 201);
+        return response()->json([
+            'success' => true,
+            'message' => 'Clock-in successful.',
+            'attendance' => $record,
+        ]);
     }
 
     public function clockOut(Request $request, GeofenceService $geofence): JsonResponse
@@ -123,6 +131,8 @@ class AttendanceController extends Controller
                 return ['missing' => true];
             }
 
+            // Use the branch stored on the attendance record. This preserves the
+            // original geofence when the user's current branch changes later.
             $branch = $record->branch;
             abort_unless($branch instanceof Branch, 422, 'The historical attendance branch could not be found.');
             abort_if($branch->latitude == 0.0 && $branch->longitude == 0.0, 422, 'The historical attendance branch has invalid GPS coordinates.');
@@ -149,17 +159,25 @@ class AttendanceController extends Controller
         });
 
         if (($result['missing'] ?? false) === true) {
-            return response()->json(['message' => 'You do not have an open attendance session.'], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have an open attendance session.',
+            ], 422);
         }
 
         if (($result['outside_geofence'] ?? false) === true) {
             return response()->json([
+                'success' => false,
                 'message' => 'Clock-out rejected. You are outside the historical attendance branch geofence.',
                 'distance_meters' => round($result['distance'], 2),
                 'allowed_radius_meters' => $result['radius'],
             ], 422);
         }
 
-        return response()->json(['message' => 'Clock-out successful.', 'attendance' => $result['record']]);
+        return response()->json([
+            'success' => true,
+            'message' => 'Clock-out successful.',
+            'attendance' => $result['record'],
+        ]);
     }
 }
