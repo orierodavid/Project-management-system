@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\AttendanceRecord;
 use App\Models\Branch;
 use App\Models\Setting;
+use App\Models\User;
 use App\Notifications\LateClockInNotification;
 use App\Services\GeofenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceController extends Controller
 {
@@ -38,41 +40,61 @@ class AttendanceController extends Controller
         $user = $request->user();
         abort_unless($user->isActive(), 403, 'Your account is suspended.');
 
-        $branch = $user->primaryBranch;
-        abort_unless($branch instanceof Branch && $branch->is_active, 422, 'You do not have an active primary branch assigned.');
-        abort_if($branch->latitude == 0.0 && $branch->longitude == 0.0, 422, 'Your assigned branch has not been configured with valid GPS coordinates.');
+        $result = DB::transaction(function () use ($user, $data, $geofence): array {
+            $lockedUser = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $branch = $lockedUser->primaryBranch;
 
-        if ($user->attendanceRecords()->whereNull('clock_out_at')->exists()) {
+            abort_unless($branch instanceof Branch && $branch->is_active, 422, 'You do not have an active primary branch assigned.');
+            abort_if($branch->latitude == 0.0 && $branch->longitude == 0.0, 422, 'Your assigned branch has not been configured with valid GPS coordinates.');
+
+            if ($lockedUser->attendanceRecords()->whereNull('clock_out_at')->exists()) {
+                return ['already_clocked_in' => true];
+            }
+
+            $distance = $geofence->distanceFromBranch($branch, (float) $data['latitude'], (float) $data['longitude']);
+
+            if ($distance > $branch->radius_meters) {
+                return [
+                    'outside_geofence' => true,
+                    'distance' => $distance,
+                    'radius' => $branch->radius_meters,
+                ];
+            }
+
+            $settings = Setting::current();
+            $now = Carbon::now($settings->timezone);
+            $lateAfter = Carbon::parse($now->toDateString().' '.$settings->late_after_time, $settings->timezone);
+            $lateMinutes = $now->greaterThan($lateAfter) ? $lateAfter->diffInMinutes($now) : 0;
+
+            $record = $lockedUser->attendanceRecords()->create([
+                'branch_id' => $branch->id,
+                'clock_in_at' => $now,
+                'clock_in_lat' => $data['latitude'],
+                'clock_in_lng' => $data['longitude'],
+                'clock_in_accuracy' => $data['accuracy'] ?? null,
+                'clock_in_distance_meters' => $distance,
+                'status' => $lateMinutes > 0 ? 'late' : 'on_time',
+                'late_minutes' => $lateMinutes,
+            ]);
+
+            return ['record' => $record, 'late' => $lateMinutes > 0];
+        });
+
+        if (($result['already_clocked_in'] ?? false) === true) {
             return response()->json(['message' => 'You are already clocked in.'], 422);
         }
 
-        $distance = $geofence->distanceFromBranch($branch, (float) $data['latitude'], (float) $data['longitude']);
-
-        if ($distance > $branch->radius_meters) {
+        if (($result['outside_geofence'] ?? false) === true) {
             return response()->json([
                 'message' => 'Clock-in rejected. You are outside your assigned branch geofence.',
-                'distance_meters' => round($distance, 2),
-                'allowed_radius_meters' => $branch->radius_meters,
+                'distance_meters' => round($result['distance'], 2),
+                'allowed_radius_meters' => $result['radius'],
             ], 422);
         }
 
-        $settings = Setting::current();
-        $now = Carbon::now($settings->timezone);
-        $lateAfter = Carbon::parse($now->toDateString().' '.$settings->late_after_time, $settings->timezone);
-        $lateMinutes = $now->greaterThan($lateAfter) ? $lateAfter->diffInMinutes($now) : 0;
+        $record = $result['record'];
 
-        $record = $user->attendanceRecords()->create([
-            'branch_id' => $branch->id,
-            'clock_in_at' => $now,
-            'clock_in_lat' => $data['latitude'],
-            'clock_in_lng' => $data['longitude'],
-            'clock_in_accuracy' => $data['accuracy'] ?? null,
-            'clock_in_distance_meters' => $distance,
-            'status' => $lateMinutes > 0 ? 'late' : 'on_time',
-            'late_minutes' => $lateMinutes,
-        ]);
-
-        if ($lateMinutes > 0) {
+        if ($result['late']) {
             $user->notify(new LateClockInNotification($record));
         }
 
@@ -87,31 +109,57 @@ class AttendanceController extends Controller
             'accuracy' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $record = $request->user()->attendanceRecords()->whereNull('clock_out_at')->latest('clock_in_at')->first();
-        abort_unless($record, 422, 'You do not have an open attendance session.');
+        $user = $request->user();
+        abort_unless($user->isActive(), 403, 'Your account is suspended.');
 
-        $branch = $record->branch;
-        abort_unless($branch instanceof Branch && $branch->is_active, 422, 'The historical attendance branch is no longer active.');
-        abort_if($branch->latitude == 0.0 && $branch->longitude == 0.0, 422, 'The historical attendance branch has invalid GPS coordinates.');
+        $result = DB::transaction(function () use ($user, $data, $geofence): array {
+            $lockedUser = User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
+            $record = $lockedUser->attendanceRecords()
+                ->whereNull('clock_out_at')
+                ->latest('clock_in_at')
+                ->first();
 
-        $distance = $geofence->distanceFromBranch($branch, (float) $data['latitude'], (float) $data['longitude']);
+            if (! $record) {
+                return ['missing' => true];
+            }
 
-        if ($distance > $branch->radius_meters) {
+            $branch = $record->branch;
+            abort_unless($branch instanceof Branch, 422, 'The historical attendance branch could not be found.');
+            abort_if($branch->latitude == 0.0 && $branch->longitude == 0.0, 422, 'The historical attendance branch has invalid GPS coordinates.');
+
+            $distance = $geofence->distanceFromBranch($branch, (float) $data['latitude'], (float) $data['longitude']);
+
+            if ($distance > $branch->radius_meters) {
+                return [
+                    'outside_geofence' => true,
+                    'distance' => $distance,
+                    'radius' => $branch->radius_meters,
+                ];
+            }
+
+            $record->update([
+                'clock_out_at' => Carbon::now(Setting::current()->timezone),
+                'clock_out_lat' => $data['latitude'],
+                'clock_out_lng' => $data['longitude'],
+                'clock_out_accuracy' => $data['accuracy'] ?? null,
+                'clock_out_distance_meters' => $distance,
+            ]);
+
+            return ['record' => $record->fresh()];
+        });
+
+        if (($result['missing'] ?? false) === true) {
+            return response()->json(['message' => 'You do not have an open attendance session.'], 422);
+        }
+
+        if (($result['outside_geofence'] ?? false) === true) {
             return response()->json([
-                'message' => 'Clock-out rejected. You are outside your assigned branch geofence.',
-                'distance_meters' => round($distance, 2),
-                'allowed_radius_meters' => $branch->radius_meters,
+                'message' => 'Clock-out rejected. You are outside the historical attendance branch geofence.',
+                'distance_meters' => round($result['distance'], 2),
+                'allowed_radius_meters' => $result['radius'],
             ], 422);
         }
 
-        $record->update([
-            'clock_out_at' => Carbon::now(Setting::current()->timezone),
-            'clock_out_lat' => $data['latitude'],
-            'clock_out_lng' => $data['longitude'],
-            'clock_out_accuracy' => $data['accuracy'] ?? null,
-            'clock_out_distance_meters' => $distance,
-        ]);
-
-        return response()->json(['message' => 'Clock-out successful.', 'attendance' => $record->fresh()]);
+        return response()->json(['message' => 'Clock-out successful.', 'attendance' => $result['record']]);
     }
 }
