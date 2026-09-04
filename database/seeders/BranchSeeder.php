@@ -16,7 +16,7 @@ class BranchSeeder extends Seeder
                 'latitude' => 0,
                 'longitude' => 0,
                 'radius_meters' => 100,
-                'is_active' => true,
+                'is_active' => false,
             ],
         );
     }
