@@ -18,6 +18,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -140,14 +142,33 @@ class TaskResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('title')->searchable()->sortable()->limit(45),
-            TextColumn::make('assignee.name')->label('Assigned to')->searchable()->sortable(),
-            TextColumn::make('department.name')->label('Department')->sortable(),
-            TextColumn::make('priority')->badge(),
-            TextColumn::make('status')->badge(),
-            TextColumn::make('deadline')->dateTime()->sortable(),
-        ])->defaultSort('deadline');
+        return $table
+            ->columns([
+                TextColumn::make('title')->searchable()->sortable()->limit(45),
+                TextColumn::make('assignee.name')->label('Assigned to')->searchable()->sortable(),
+                TextColumn::make('department.name')->label('Department')->sortable(),
+                TextColumn::make('priority')->badge(),
+                TextColumn::make('status')->badge(),
+                TextColumn::make('deadline')->dateTime()->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->options([
+                        'todo' => 'To do',
+                        'in_progress' => 'In progress',
+                        'review' => 'Review',
+                        'done' => 'Done',
+                    ]),
+                SelectFilter::make('priority')
+                    ->options([
+                        'low' => 'Low',
+                        'medium' => 'Medium',
+                        'high' => 'High',
+                    ]),
+                TernaryFilter::make('is_overdue')
+                    ->label('Overdue'),
+            ])
+            ->defaultSort('deadline');
     }
 
     public static function getRelations(): array
