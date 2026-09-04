@@ -77,22 +77,25 @@ class TaskAutomationTest extends TestCase
         $this->artisan('tasks:check-due-soon')->assertSuccessful();
 
         Notification::assertSentTo($user, TaskEventNotification::class, function ($notification) use ($inside): bool {
-            return $notification->task->is($inside) && $notification->title === 'Task due soon';
+            return $notification->task->is($inside) && $notification->event === 'Task due soon';
         });
 
-        Notification::assertNotSentTo($user, function ($notification) use ($outside): bool {
-            return $notification instanceof TaskEventNotification && $notification->task->is($outside);
+        Notification::assertNotSentTo($user, TaskEventNotification::class, function ($notification) use ($outside): bool {
+            return $notification->task->is($outside);
         });
     }
 
     public function test_due_soon_command_does_not_duplicate_recent_notification(): void
     {
-        Notification::fake();
         $user = $this->makeUser();
         $task = $this->makeTask($user, ['deadline' => Carbon::now()->addHours(2)]);
 
         $this->artisan('tasks:check-due-soon')->assertSuccessful();
-        Notification::assertSentToTimes($user, TaskEventNotification::class, 1);
+
+        $this->assertDatabaseHas('notifications', [
+            'notifiable_id' => $user->id,
+            'type' => TaskEventNotification::class,
+        ]);
 
         Notification::fake();
         $this->artisan('tasks:check-due-soon')->assertSuccessful();
@@ -101,9 +104,13 @@ class TaskAutomationTest extends TestCase
         $this->assertDatabaseHas('notifications', [
             'notifiable_id' => $user->id,
             'type' => TaskEventNotification::class,
+            'data' => json_encode([
+                'task_id' => $task->id,
+                'event' => 'Task due soon',
+                'title' => 'Task due soon',
+                'message' => 'This task is due within 2 hours from now.',
+            ]),
         ]);
-
-        $this->assertTrue($task->exists);
     }
 
     public function test_overdue_command_marks_only_open_past_deadline_tasks_and_notifies(): void
@@ -130,7 +137,7 @@ class TaskAutomationTest extends TestCase
         ]);
 
         Notification::assertSentTo($user, TaskEventNotification::class, function ($notification) use ($overdue): bool {
-            return $notification->task->is($overdue) && $notification->title === 'Task overdue';
+            return $notification->task->is($overdue) && $notification->event === 'Task overdue';
         });
     }
 }
