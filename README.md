@@ -66,6 +66,28 @@ npm install
 npm run build
 ```
 
+## XAMPP / Windows development
+
+If Apache and MySQL are being provided by XAMPP, run the Laravel commands from the project directory using the PHP and Composer installations available on your machine. The application itself does not require a Git process to run; Git is used to pull repository updates.
+
+After pulling an update, run:
+
+```bash
+git pull origin main
+composer install
+php artisan migrate
+php artisan optimize:clear
+```
+
+If frontend files changed, also run:
+
+```bash
+npm install
+npm run build
+```
+
+For local development, `php artisan serve` can be used instead of Apache. If the project is served directly through XAMPP Apache, make sure Apache's document root points to Laravel's `public` directory (or configure an equivalent virtual host).
+
 ## First installation
 
 The seeders create the default roles, a `Head Office` branch and a Super Admin account. Configure the generated Super Admin credentials through the deployment environment before seeding a production installation; do not rely on the development fallback password in production.
@@ -88,13 +110,29 @@ Notifications are designed to use Laravel's notification/queue infrastructure. F
 php artisan queue:work --tries=3
 ```
 
+For XAMPP/Windows development, start the worker in a separate terminal and leave it running while testing queued notifications:
+
+```bash
+php artisan queue:work --tries=3
+```
+
 ## Scheduler
 
-The application schedules due-soon and overdue task checks. Run Laravel's scheduler every minute from cron:
+The application schedules due-soon and overdue task checks. Run Laravel's scheduler every minute in production:
 
 ```cron
 * * * * * cd /path/to/project && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+### XAMPP / Windows scheduler
+
+Windows does not use the Linux cron example above. For local XAMPP testing, open a second terminal in the Laravel project directory and run:
+
+```bash
+php artisan schedule:work
+```
+
+Leave that process running while testing scheduled task notifications. For a persistent Windows installation, configure Windows Task Scheduler to run `php artisan schedule:run` every minute using the PHP executable for the Laravel installation and the project directory as the working directory.
 
 For local inspection:
 
@@ -108,7 +146,7 @@ The browser supplies GPS coordinates, but the server performs the authoritative 
 
 ## CI
 
-GitHub Actions runs dependency installation, migrations, the Laravel test suite and Laravel Pint against the repository. CI uses SQLite for the database test environment.
+GitHub Actions runs dependency installation, migrations, the Laravel test suite and Laravel Pint against the repository. CI uses SQLite for the database test environment. Formatting checks are read-only; CI does not push changes back to `main`.
 
 ## Development phases
 1. Foundation and database architecture
