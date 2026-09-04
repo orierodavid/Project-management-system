@@ -56,8 +56,10 @@ class InstallerController extends Controller
         ]);
 
         try {
-            $this->writeEnvironment($data);
-            $this->applyRuntimeEnvironment($data);
+            $appKey = 'base64,'.base64_encode(random_bytes(32));
+
+            $this->writeEnvironment($data, $appKey);
+            $this->applyRuntimeEnvironment($data, $appKey);
             $this->createDatabaseIfMissing($data);
 
             Artisan::call('config:clear');
@@ -110,7 +112,7 @@ class InstallerController extends Controller
         file_put_contents(storage_path('app/installed.lock'), now()->toIso8601String());
     }
 
-    private function writeEnvironment(array $data): void
+    private function writeEnvironment(array $data, string $appKey): void
     {
         $envPath = base_path('.env');
 
@@ -125,7 +127,7 @@ class InstallerController extends Controller
             'APP_DEBUG' => 'true',
             'APP_URL' => rtrim($data['app_url'], '/'),
             'APP_TIMEZONE' => $data['timezone'],
-            'APP_KEY' => 'base64,'.base64_encode(random_bytes(32)),
+            'APP_KEY' => $appKey,
             'DB_CONNECTION' => 'mysql',
             'DB_HOST' => $data['db_host'],
             'DB_PORT' => (string) $data['db_port'],
@@ -151,12 +153,13 @@ class InstallerController extends Controller
         file_put_contents($envPath, $contents);
     }
 
-    private function applyRuntimeEnvironment(array $data): void
+    private function applyRuntimeEnvironment(array $data, string $appKey): void
     {
         $runtime = [
             'APP_NAME' => $data['app_name'],
             'APP_URL' => rtrim($data['app_url'], '/'),
             'APP_TIMEZONE' => $data['timezone'],
+            'APP_KEY' => $appKey,
             'DB_CONNECTION' => 'mysql',
             'DB_HOST' => $data['db_host'],
             'DB_PORT' => (string) $data['db_port'],
@@ -175,6 +178,7 @@ class InstallerController extends Controller
             'app.name' => $data['app_name'],
             'app.url' => rtrim($data['app_url'], '/'),
             'app.timezone' => $data['timezone'],
+            'app.key' => $appKey,
             'database.default' => 'mysql',
             'database.connections.mysql.host' => $data['db_host'],
             'database.connections.mysql.port' => $data['db_port'],
