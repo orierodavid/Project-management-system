@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class AttendanceRecord extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'user_id', 'branch_id', 'clock_in_at', 'clock_in_lat', 'clock_in_lng',
@@ -20,6 +22,17 @@ class AttendanceRecord extends Model
     protected function casts(): array
     {
         return ['clock_in_at' => 'datetime', 'clock_out_at' => 'datetime'];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('attendance')
+            ->logOnly([
+                'user_id', 'branch_id', 'clock_in_at', 'clock_out_at', 'status', 'late_minutes',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
     }
 
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
