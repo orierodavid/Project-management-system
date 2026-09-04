@@ -3,14 +3,27 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Setting extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'company_name', 'company_logo', 'primary_color', 'secondary_color',
         'timezone', 'work_start_time', 'late_after_time', 'work_end_time',
         'task_due_soon_hours',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('settings')
+            ->logOnly($this->fillable)
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     public static function current(): static
     {
