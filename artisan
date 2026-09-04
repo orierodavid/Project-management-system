@@ -3,7 +3,7 @@
 
 use Symfony\Component\Console\Input\ArgvInput;
 
-const LARAVEL_START = 0;
+define('LARAVEL_START', microtime(true));
 
 require __DIR__.'/vendor/autoload.php';
 
