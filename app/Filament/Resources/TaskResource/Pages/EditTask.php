@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\TaskResource\Pages;
 
 use App\Filament\Resources\TaskResource;
-use App\Models\Task;
 use App\Models\User;
 use App\Notifications\TaskEventNotification;
 use Filament\Resources\Pages\EditRecord;
@@ -22,12 +21,12 @@ class EditTask extends EditRecord
         $actor = auth()->user();
         $data = $this->form->getRawState();
 
-        if (! $actor || ! $actor->can('manage-tasks')) {
+        if (! $actor || ! ($actor->can('manage-tasks') || $actor->can('update-own-tasks'))) {
             throw new AuthorizationException('You are not authorized to edit tasks.');
         }
 
         if ($actor->hasRole('Staff')) {
-            if ((int) $this->record->assigned_to !== (int) $actor->id) {
+            if (! $actor->can('update-own-tasks') || (int) $this->record->assigned_to !== (int) $actor->id) {
                 throw new AuthorizationException('You can only update tasks assigned to you.');
             }
 
@@ -69,7 +68,6 @@ class EditTask extends EditRecord
         $this->previousAssignee = $this->record->assigned_to;
 
         if (auth()->user()?->hasRole('Staff')) {
-            // Staff are intentionally limited to changing workflow status.
             $data = ['status' => $data['status'] ?? $this->record->status];
         }
 
