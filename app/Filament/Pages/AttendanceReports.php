@@ -65,7 +65,7 @@ class AttendanceReports extends Page implements HasForms
             Select::make('branch_id')->label('Branch')->options($branchQuery->pluck('name', 'id'))->searchable()->preload(),
             Select::make('user_id')->label('Employee')->options($userQuery->pluck('name', 'id'))->searchable()->preload(),
             Select::make('status')->label('Status')->options([
-                'present' => 'Present',
+                'on_time' => 'On Time',
                 'late' => 'Late',
             ]),
         ])->statePath('data')->columns(5);
