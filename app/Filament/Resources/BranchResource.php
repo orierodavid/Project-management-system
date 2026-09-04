@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\BranchResource\Pages\CreateBranch;
+use App\Filament\Resources\BranchResource\Pages\EditBranch;
+use App\Filament\Resources\BranchResource\Pages\ListBranches;
 use App\Models\Branch;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -10,7 +13,6 @@ use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class BranchResource extends Resource
 {
@@ -49,9 +51,9 @@ class BranchResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListBranches::route('/'),
-            'create' => Pages\CreateBranch::route('/create'),
-            'edit' => Pages\EditBranch::route('/{record}/edit'),
+            'index' => ListBranches::route('/'),
+            'create' => CreateBranch::route('/create'),
+            'edit' => EditBranch::route('/{record}/edit'),
         ];
     }
 }
