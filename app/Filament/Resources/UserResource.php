@@ -10,12 +10,13 @@ use App\Models\Department;
 use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
@@ -34,23 +35,12 @@ class UserResource extends Resource
             TextInput::make('name')->required()->maxLength(255),
             TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
             TextInput::make('phone')->tel()->maxLength(30),
-            TextInput::make('password')->password()->revealable()
-                ->required(fn (string $operation): bool => $operation === 'create')
-                ->dehydrated(fn (?string $state): bool => filled($state))
-                ->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
-            Select::make('department_id')->label('Department')
-                ->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                ->searchable()->preload(),
-            Select::make('primary_branch_id')->label('Primary branch')
-                ->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                ->searchable()->preload(),
+            TextInput::make('password')->password()->revealable()->required(fn (string $operation): bool => $operation === 'create')->dehydrated(fn (?string $state): bool => filled($state))->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
+            Select::make('department_id')->label('Department')->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload(),
+            Select::make('primary_branch_id')->label('Primary branch')->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload(),
             Select::make('status')->options(['active' => 'Active', 'suspended' => 'Suspended'])->required()->default('active'),
-            Select::make('roles')->label('Role')
-                ->options(fn () => Role::query()->orderBy('name')->pluck('name', 'name'))
-                ->required()->default('Staff')->dehydrated(false),
-            Select::make('branches')->label('Branch access')->multiple()
-                ->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                ->preload()->searchable()->dehydrated(false),
+            Select::make('roles')->label('Role')->options(fn () => \Spatie\Permission\Models\Role::query()->orderBy('name')->pluck('name', 'name'))->required()->default('Staff')->dehydrated(false),
+            Select::make('branches')->label('Branch access')->multiple()->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->preload()->searchable()->dehydrated(false),
         ]);
     }
 
