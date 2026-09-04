@@ -75,7 +75,7 @@ class EditTask extends EditRecord
         if (($data['status'] ?? null) === 'done') {
             $data['completed_at'] ??= Carbon::now();
             $data['is_overdue'] = false;
-        } elseif (($data['deadline'] ?? $this->record->deadline)?->isPast()) {
+        } elseif (($data['deadline'] ?? $this->record->deadline) !== null && Carbon::parse($data['deadline'] ?? $this->record->deadline)->isPast()) {
             $data['completed_at'] = null;
             $data['is_overdue'] = true;
         } else {
