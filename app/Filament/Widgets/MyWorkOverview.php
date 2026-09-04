@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Setting;
 use App\Models\Task;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -24,14 +25,15 @@ class MyWorkOverview extends StatsOverviewWidget
         }
 
         $today = Carbon::now();
+        $dueSoonHours = Setting::current()->task_due_soon_hours;
         $openAttendance = $user?->attendanceRecords()->whereNull('clock_out_at')->exists();
 
         return [
             Stat::make('Open tasks', (clone $tasks)->whereNotIn('status', ['done'])->count())
                 ->description('Tasks still requiring work')
                 ->icon('heroicon-o-clipboard-document-list'),
-            Stat::make('Due soon', (clone $tasks)->whereNotNull('deadline')->whereBetween('deadline', [$today, $today->copy()->addDay()])->whereNot('status', 'done')->count())
-                ->description('Due within 24 hours')
+            Stat::make('Due soon', (clone $tasks)->whereNotNull('deadline')->whereBetween('deadline', [$today, $today->copy()->addHours($dueSoonHours)])->whereNot('status', 'done')->count())
+                ->description("Due within {$dueSoonHours} hours")
                 ->icon('heroicon-o-clock'),
             Stat::make('Overdue', (clone $tasks)->where('is_overdue', true)->whereNot('status', 'done')->count())
                 ->description('Past their deadline')
