@@ -19,8 +19,9 @@ class EditUser extends EditRecord
 
     protected function afterSave(): void
     {
-        $role = $this->data['roles'] ?? 'Staff';
-        $branches = $this->data['branches'] ?? [];
+        $state = $this->form->getRawState();
+        $role = $state['roles'] ?? 'Staff';
+        $branches = $state['branches'] ?? [];
 
         $this->record->syncRoles([$role]);
         $this->record->branches()->sync($branches ?: array_filter([$this->record->primary_branch_id]));
