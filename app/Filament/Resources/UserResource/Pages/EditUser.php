@@ -10,6 +10,11 @@ class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
 
+    protected ?string $previousRole = null;
+
+    /** @var array<int, int> */
+    protected array $previousBranches = [];
+
     protected function mutateFormDataBeforeFill(array $data): array
     {
         $data['roles'] = $this->record->roles()->pluck('name')->first();
@@ -26,6 +31,9 @@ class EditUser extends EditRecord
         if (! $actor?->can('manage-users')) {
             throw new AuthorizationException('You are not authorized to edit users.');
         }
+
+        $this->previousRole = $this->record->roles()->pluck('name')->first();
+        $this->previousBranches = $this->record->branches()->pluck('branches.id')->map(fn ($id) => (int) $id)->sort()->values()->all();
 
         if ($actor->hasRole('Admin')) {
             if (! $this->record->hasRole('Staff')) {
@@ -47,13 +55,26 @@ class EditUser extends EditRecord
         $actor = auth()->user();
         $state = $this->form->getRawState();
         $role = $state['roles'] ?? 'Staff';
-        $branches = $state['branches'] ?? [];
+        $branches = array_map('intval', $state['branches'] ?? []);
 
         if ($actor?->hasRole('Admin')) {
             $role = 'Staff';
         }
 
         $this->record->syncRoles([$role]);
-        $this->record->branches()->sync($branches ?: array_filter([$this->record->primary_branch_id]));
+        $effectiveBranches = $branches ?: array_filter([(int) $this->record->primary_branch_id]);
+        $this->record->branches()->sync($effectiveBranches);
+
+        $newBranches = collect($effectiveBranches)->sort()->values()->all();
+
+        if ($this->previousRole !== $role || $this->previousBranches !== $newBranches) {
+            activity('users')
+                ->performedOn($this->record)
+                ->withProperties([
+                    'role' => ['before' => $this->previousRole, 'after' => $role],
+                    'branches' => ['before' => $this->previousBranches, 'after' => $newBranches],
+                ])
+                ->log('Access updated');
+        }
     }
 }
