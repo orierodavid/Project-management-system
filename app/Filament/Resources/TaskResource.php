@@ -41,12 +41,22 @@ class TaskResource extends Resource
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        return (bool) ($user?->can('manage-tasks') || ($user?->can('update-own-tasks') && (int) $record->assigned_to === (int) $user->id));
+
+        if ($user?->hasRole('Staff')) {
+            return (bool) ($user->can('update-own-tasks') && (int) $record->assigned_to === (int) $user->id);
+        }
+
+        if ($user?->hasRole('Admin')) {
+            return (bool) ($user->can('manage-tasks') && static::recordIsWithinUserBranches($record, $user));
+        }
+
+        return (bool) $user?->can('manage-tasks');
     }
 
     public static function canDelete($record): bool
     {
-        return (bool) auth()->user()?->can('manage-tasks');
+        $user = auth()->user();
+        return (bool) ($user?->can('manage-tasks') && (! $user->hasRole('Admin') || static::recordIsWithinUserBranches($record, $user)));
     }
 
     public static function getEloquentQuery(): Builder
@@ -68,7 +78,26 @@ class TaskResource extends Resource
 
     public static function form(Form $form): Form
     {
-        $staff = auth()->user()?->hasRole('Staff');
+        $actor = auth()->user();
+        $staff = (bool) $actor?->hasRole('Staff');
+        $isSuperAdmin = (bool) $actor?->hasRole('Super Admin');
+        $branchIds = $actor?->branches()->pluck('branches.id')->all() ?? [];
+
+        $branchQuery = Branch::query()->where('is_active', true)->orderBy('name');
+        $assigneeQuery = User::query()->where('status', 'active')->orderBy('name');
+
+        if (! $isSuperAdmin) {
+            $branchQuery->whereIn('id', $branchIds);
+        }
+
+        if ($actor?->hasRole('Admin')) {
+            $assigneeQuery
+                ->whereHas('roles', fn (Builder $q) => $q->where('name', 'Staff'))
+                ->where(function (Builder $q) use ($branchIds) {
+                    $q->whereIn('primary_branch_id', $branchIds)
+                        ->orWhereHas('branches', fn (Builder $q) => $q->whereIn('branches.id', $branchIds));
+                });
+        }
 
         return $form->schema([
             TextInput::make('title')->required()->maxLength(255),
@@ -79,12 +108,12 @@ class TaskResource extends Resource
                 ->searchable()->preload()
                 ->disabled($staff),
             Select::make('branch_id')
-                ->options(Branch::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                ->options($branchQuery->pluck('name', 'id'))
                 ->searchable()->preload()
                 ->disabled($staff),
             Select::make('assigned_to')
                 ->label('Assignee')
-                ->options(User::query()->where('status', 'active')->orderBy('name')->pluck('name', 'id'))
+                ->options($assigneeQuery->pluck('name', 'id'))
                 ->searchable()->preload()
                 ->disabled($staff),
             Select::make('priority')
@@ -96,6 +125,13 @@ class TaskResource extends Resource
                 ->required()->default('todo'),
             DateTimePicker::make('deadline')->seconds(false)->native(false)->disabled($staff),
         ]);
+    }
+
+    protected static function recordIsWithinUserBranches(Task $record, User $user): bool
+    {
+        $branchIds = $user->branches()->pluck('branches.id');
+
+        return $record->branch_id === null || $branchIds->contains($record->branch_id);
     }
 
     public static function table(Table $table): Table
