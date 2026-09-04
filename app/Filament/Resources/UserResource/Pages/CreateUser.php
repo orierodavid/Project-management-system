@@ -39,13 +39,22 @@ class CreateUser extends CreateRecord
         $actor = auth()->user();
         $state = $this->form->getRawState();
         $role = $state['roles'] ?? 'Staff';
-        $branches = $state['branches'] ?? [];
+        $branches = array_map('intval', $state['branches'] ?? []);
 
         if ($actor?->hasRole('Admin')) {
             $role = 'Staff';
         }
 
         $this->record->syncRoles([$role]);
-        $this->record->branches()->sync($branches ?: ($this->record->primary_branch_id ? [$this->record->primary_branch_id] : []));
+        $effectiveBranches = $branches ?: array_filter([(int) $this->record->primary_branch_id]);
+        $this->record->branches()->sync($effectiveBranches);
+
+        activity('users')
+            ->performedOn($this->record)
+            ->withProperties([
+                'role' => ['before' => null, 'after' => $role],
+                'branches' => ['before' => [], 'after' => array_values($effectiveBranches)],
+            ])
+            ->log('Access assigned');
     }
 }
