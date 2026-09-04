@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Table;
+use Illuminate\Validation\ValidationException;
 
 class BranchResource extends Resource
 {
@@ -32,9 +33,34 @@ class BranchResource extends Resource
             TextInput::make('address')->maxLength(255),
             TextInput::make('latitude')->numeric()->required()->minValue(-90)->maxValue(90),
             TextInput::make('longitude')->numeric()->required()->minValue(-180)->maxValue(180),
-            TextInput::make('radius_meters')->numeric()->integer()->required()->minValue(1)->default(100),
-            Toggle::make('is_active')->default(true),
+            TextInput::make('radius_meters')->numeric()->integer()->required()->minValue(1)->default(100)->maxValue(50000),
+            Toggle::make('is_active')->default(false),
         ]);
+    }
+
+    public static function mutateFormDataBeforeCreate(array $data): array
+    {
+        static::validateCoordinates($data);
+        return $data;
+    }
+
+    public static function mutateFormDataBeforeSave(array $data): array
+    {
+        static::validateCoordinates($data);
+        return $data;
+    }
+
+    protected static function validateCoordinates(array $data): void
+    {
+        if (! ($data['is_active'] ?? false)) {
+            return;
+        }
+
+        if ((float) ($data['latitude'] ?? 0) === 0.0 && (float) ($data['longitude'] ?? 0) === 0.0) {
+            throw ValidationException::withMessages([
+                'latitude' => 'An active branch must have real GPS coordinates. 0,0 is not a valid configured workplace location.',
+            ]);
+        }
     }
 
     public static function table(Table $table): Table
