@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\TaskResource\Pages\CreateTask;
+use App\Filament\Resources\TaskResource\Pages\EditTask;
+use App\Filament\Resources\TaskResource\Pages\ListTasks;
 use App\Filament\Resources\TaskResource\RelationManagers\AttachmentsRelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers\CommentsRelationManager;
 use App\Models\Branch;
@@ -118,9 +121,9 @@ class TaskResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTasks::route('/'),
-            'create' => Pages\CreateTask::route('/create'),
-            'edit' => Pages\EditTask::route('/{record}/edit'),
+            'index' => ListTasks::route('/'),
+            'create' => CreateTask::route('/create'),
+            'edit' => EditTask::route('/{record}/edit'),
         ];
     }
 }
