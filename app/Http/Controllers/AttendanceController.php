@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AttendanceRecord;
 use App\Models\Branch;
+use App\Models\Setting;
 use App\Services\GeofenceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,10 +40,10 @@ class AttendanceController extends Controller
             ], 422);
         }
 
-        $now = Carbon::now(config('app.timezone'));
-        $settings = \App\Models\Setting::current();
+        $settings = Setting::current();
+        $now = Carbon::now($settings->timezone);
         $lateAfter = Carbon::parse($now->toDateString().' '.$settings->late_after_time, $settings->timezone);
-        $lateMinutes = max(0, $lateAfter->diffInMinutes($now, false));
+        $lateMinutes = $now->greaterThan($lateAfter) ? $lateAfter->diffInMinutes($now) : 0;
 
         $record = $user->attendanceRecords()->create([
             'branch_id' => $branch->id,
@@ -81,7 +82,7 @@ class AttendanceController extends Controller
         }
 
         $record->update([
-            'clock_out_at' => Carbon::now(config('app.timezone')),
+            'clock_out_at' => Carbon::now(Setting::current()->timezone),
             'clock_out_lat' => $data['latitude'],
             'clock_out_lng' => $data['longitude'],
             'clock_out_accuracy' => $data['accuracy'] ?? null,
