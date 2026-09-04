@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\TaskResource\Pages;
 
 use App\Filament\Resources\TaskResource;
-use App\Models\User;
 use App\Notifications\TaskEventNotification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Carbon;
