@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Setting;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
@@ -38,7 +39,7 @@ class CompanySettings extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        return (bool) auth()->user()?->can('manage-settings');
+        return (bool) Filament::auth()->user()?->can('manage-settings');
     }
 
     public function form(Form $form): Form
@@ -108,8 +109,6 @@ class CompanySettings extends Page implements HasForms
         $setting = Setting::current();
         $state = $this->form->getState();
 
-        // Never erase a working logo when another settings field is saved.
-        // Only replace the stored logo after Filament has successfully persisted a new file.
         $logo = $state['company_logo'] ?? null;
         if (filled($logo)) {
             if (! Storage::disk('public')->exists($logo)) {
