@@ -9,3 +9,4 @@
 @include('filament.dynamic-brand-theme')
 @include('filament.desktop-responsive-fix')
 @include('filament.modern-form-style')
+@include('filament.control-foreground-fix')
