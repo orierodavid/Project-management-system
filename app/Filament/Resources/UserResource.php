@@ -13,6 +13,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Hash;
@@ -90,14 +91,52 @@ class UserResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('name')->label('Person')->searchable()->sortable()->weight('semibold'),
-            TextColumn::make('email')->searchable(),
-            TextColumn::make('department.name')->label('Department')->sortable()->placeholder('—'),
-            TextColumn::make('primaryBranch.name')->label('Branch')->sortable()->placeholder('—'),
-            TextColumn::make('roles.name')->badge()->label('Role'),
-            TextColumn::make('status')->badge()->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))->color(fn (?string $state): string => $state === 'active' ? 'success' : 'danger'),
-        ])->defaultSort('name');
+        return $table
+            ->columns([
+                TextColumn::make('name')
+                    ->label('User')
+                    ->searchable()->sortable()
+                    ->weight('semibold')
+                    ->description(fn (User $record): string => $record->email),
+                TextColumn::make('phone')
+                    ->label('Phone')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('department.name')
+                    ->label('Department')
+                    ->sortable()
+                    ->placeholder('—')
+                    ->wrap(),
+                TextColumn::make('primaryBranch.name')
+                    ->label('Primary branch')
+                    ->sortable()
+                    ->placeholder('—')
+                    ->wrap(),
+                TextColumn::make('roles.name')
+                    ->label('Role')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'Super Admin' => 'danger',
+                        'Admin' => 'info',
+                        'Staff' => 'gray',
+                        default => 'gray',
+                    }),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))
+                    ->color(fn (?string $state): string => $state === 'active' ? 'success' : 'danger'),
+            ])
+            ->filters([
+                SelectFilter::make('status')
+                    ->options(['active' => 'Active', 'suspended' => 'Suspended']),
+                SelectFilter::make('department_id')
+                    ->label('Department')
+                    ->relationship('department', 'name'),
+            ])
+            ->defaultSort('name')
+            ->defaultPaginationPageOption(25)
+            ->paginated([10, 25, 50, 100]);
     }
 
     public static function getPages(): array
