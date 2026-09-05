@@ -6,3 +6,4 @@
 @include('filament.product-ux-polish')
 @include('filament.product-responsive')
 @include('filament.compact-ui')
+@include('filament.dynamic-brand-theme')
