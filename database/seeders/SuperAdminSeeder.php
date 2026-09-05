@@ -12,16 +12,13 @@ class SuperAdminSeeder extends Seeder
     public function run(): void
     {
         $branch = Branch::query()->first();
-        $email = env('SUPER_ADMIN_EMAIL', 'admin@example.com');
-        $password = env('SUPER_ADMIN_PASSWORD', 'ChangeMe123!');
+        $email = env('SUPER_ADMIN_EMAIL', 'orierodavid@gmail.com');
+        $password = env('SUPER_ADMIN_PASSWORD') ?: 'ChangeMe123!';
 
         $user = User::query()->firstOrNew(['email' => $email]);
         $user->name = env('SUPER_ADMIN_NAME', 'System Administrator');
         $user->status = 'active';
-
-        if ($password !== '') {
-            $user->password = Hash::make($password);
-        }
+        $user->password = Hash::make($password);
 
         if ($branch) {
             $user->primary_branch_id = $branch->id;
@@ -33,6 +30,7 @@ class SuperAdminSeeder extends Seeder
             $user->branches()->syncWithoutDetaching([$branch->id]);
         }
 
+        // Super Admin only: remove every other role from this account.
         $user->syncRoles(['Super Admin']);
     }
 }
