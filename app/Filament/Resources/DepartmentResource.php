@@ -43,12 +43,29 @@ class DepartmentResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('name')->searchable()->sortable()->weight('semibold'),
-            TextColumn::make('users_count')->counts('users')->label('Staff'),
-            IconColumn::make('is_active')->boolean(),
-            TextColumn::make('created_at')->dateTime('M j, Y')->sortable(),
-        ])->defaultSort('name');
+        return $table
+            ->columns([
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn (Department $record): ?string => $record->description),
+                TextColumn::make('users_count')
+                    ->counts('users')
+                    ->label('People')
+                    ->badge()
+                    ->color('gray'),
+                IconColumn::make('is_active')
+                    ->label('Status')
+                    ->boolean(),
+                TextColumn::make('created_at')
+                    ->dateTime('M j, Y')
+                    ->sortable()
+                    ->label('Created'),
+            ])
+            ->defaultSort('name')
+            ->striped(false)
+            ->persistSearchInSession();
     }
 
     public static function getPages(): array
