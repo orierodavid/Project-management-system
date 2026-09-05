@@ -5,3 +5,4 @@
 @include('filament.product-consistency')
 @include('filament.product-ux-polish')
 @include('filament.product-responsive')
+@include('filament.compact-ui')
