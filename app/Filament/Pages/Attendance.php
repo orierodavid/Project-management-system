@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use Filament\Facades\Filament;
 use Filament\Pages\Page;
 
 class Attendance extends Page
@@ -18,14 +19,12 @@ class Attendance extends Page
 
     public static function canAccess(): bool
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         if (! $user) {
             return false;
         }
 
-        // Attendance is available to authenticated staff and administrators.
-        // The individual clock actions remain protected by their own permissions.
-        return $user->hasAnyRole(['Staff', 'Admin', 'Super Admin']);
+        return $user->isActive() && $user->hasAnyRole(['Staff', 'Admin', 'Super Admin']);
     }
 }
