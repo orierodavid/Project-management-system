@@ -39,12 +39,16 @@ class DepartmentResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('name')->searchable()->sortable()->weight('semibold'),
-            TextColumn::make('users_count')->counts('users')->label('Staff'),
-            IconColumn::make('is_active')->boolean(),
-            TextColumn::make('created_at')->dateTime('M j, Y')->sortable(),
-        ])->defaultSort('name');
+        return $table
+            ->columns([
+                TextColumn::make('name')->label('Department')->searchable()->sortable()->weight('semibold')->wrap(),
+                TextColumn::make('users_count')->counts('users')->label('Staff')->sortable()->alignEnd(),
+                IconColumn::make('is_active')->label('Status')->boolean(),
+                TextColumn::make('created_at')->label('Created')->dateTime('M j, Y')->sortable()->color('gray'),
+            ])
+            ->defaultSort('name')
+            ->defaultPaginationPageOption(25)
+            ->paginated([10, 25, 50, 100]);
     }
 
     public static function getPages(): array
