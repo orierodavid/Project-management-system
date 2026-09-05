@@ -3,7 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\StaffLogin;
-use App\Filament\Pages\Dashboard;
+use App\Filament\Pages\StaffDashboard;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -33,7 +33,7 @@ class StaffPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->pages([Dashboard::class])
+            ->pages([StaffDashboard::class])
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.theme')->render())
             ->renderHook(PanelsRenderHook::BODY_START, fn (): string => view('filament.product-shell')->render())
             ->middleware([
