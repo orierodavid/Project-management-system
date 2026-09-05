@@ -15,6 +15,11 @@ class StaffDashboard extends BaseDashboard
     protected static ?int $navigationSort = 1;
     protected static ?string $title = 'Dashboard';
 
+    public static function getSlug(): string
+    {
+        return 'dashboard';
+    }
+
     public function getViewData(): array
     {
         $user = Filament::auth()->user();
