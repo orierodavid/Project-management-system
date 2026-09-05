@@ -1,16 +1,27 @@
 {{-- Final shared UX polish. Presentation only; business logic, routes and permissions remain unchanged. --}}
 <style>
-    /* Page rhythm */
-    .fi-page {
-        gap: 20px !important;
-    }
-
+    /* Product typography and page rhythm */
+    .fi-page,
     .fi-page-content {
         gap: 20px !important;
     }
 
+    .fi-page-header {
+        gap: 16px !important;
+    }
+
     .fi-header-actions {
         gap: 8px !important;
+    }
+
+    .fi-header-heading,
+    .fi-page-header-heading {
+        letter-spacing: -.035em !important;
+    }
+
+    .fi-header-subheading {
+        margin-top: 5px !important;
+        line-height: 1.55 !important;
     }
 
     /* Forms */
@@ -27,13 +38,19 @@
     .fi-fo-field-wrp-helper-text,
     .fi-fo-field-wrp-error-message {
         font-size: 12px !important;
+        line-height: 1.45 !important;
     }
 
     .fi-input-wrp {
+        min-height: 40px !important;
         border-radius: 8px !important;
         border-color: #d0d5dd !important;
         box-shadow: 0 1px 2px rgba(16, 24, 40, .03) !important;
         transition: border-color .15s ease, box-shadow .15s ease !important;
+    }
+
+    .fi-input-wrp:hover {
+        border-color: #b8c1cc !important;
     }
 
     .fi-input-wrp:focus-within {
@@ -41,11 +58,27 @@
         box-shadow: 0 0 0 3px rgba(37, 99, 235, .09) !important;
     }
 
-    /* Filters / table toolbar */
+    /* Tables: tighter hierarchy, easier scanning */
     .fi-ta-header-toolbar {
         padding: 14px 16px !important;
         border-bottom: 1px solid #eef0f3 !important;
         gap: 12px !important;
+    }
+
+    .fi-ta-header-toolbar .fi-input-wrp {
+        box-shadow: none !important;
+    }
+
+    .fi-ta-header-cell {
+        white-space: nowrap !important;
+    }
+
+    .fi-ta-record {
+        transition: background-color .15s ease !important;
+    }
+
+    .fi-ta-record:hover {
+        background: #f8fafc !important;
     }
 
     .fi-ta-filter-indicators {
@@ -94,6 +127,12 @@
         padding: 14px 20px !important;
     }
 
+    /* Focus states: keyboard-visible without visual noise */
+    :where(button, a, input, select, textarea):focus-visible {
+        outline: 2px solid rgba(37, 99, 235, .55) !important;
+        outline-offset: 2px !important;
+    }
+
     /* Notifications / alerts */
     .fi-no-notification {
         border-radius: 10px !important;
@@ -109,12 +148,9 @@
         min-height: 36px !important;
     }
 
-    /* Avoid oversized stock Filament content on smaller screens. */
+    /* Keep dense product tables usable on phones rather than crushing columns. */
     @media (max-width: 1023px) {
-        .fi-page {
-            gap: 16px !important;
-        }
-
+        .fi-page,
         .fi-page-content {
             gap: 16px !important;
         }
