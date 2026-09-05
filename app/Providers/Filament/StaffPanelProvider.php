@@ -2,7 +2,7 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Auth\Login;
+use App\Filament\Auth\StaffLogin;
 use App\Filament\Pages\Dashboard;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
@@ -26,7 +26,7 @@ class StaffPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('staff')->path('staff')->login(Login::class)
+            ->id('staff')->path('staff')->login(StaffLogin::class)
             ->brandName(fn (): string => Setting::current()->company_name ?: 'Project Management System')
             ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
             ->colors(['primary' => Color::hex(Setting::current()->primary_color ?: '#2563EB')])
