@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use Filament\Facades\Filament;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Auth\Access\AuthorizationException;
 
@@ -12,7 +13,7 @@ class CreateUser extends CreateRecord
 
     protected function beforeCreate(): void
     {
-        $actor = auth()->user();
+        $actor = Filament::auth()->user();
         $state = $this->form->getRawState();
 
         if (! $actor || ! ($actor->hasRole('Super Admin') || $actor->hasRole('Admin'))) {
@@ -36,7 +37,7 @@ class CreateUser extends CreateRecord
 
     protected function afterCreate(): void
     {
-        $actor = auth()->user();
+        $actor = Filament::auth()->user();
         $state = $this->form->getRawState();
         $role = $state['roles'] ?? 'Staff';
         $branches = array_map('intval', $state['branches'] ?? []);
