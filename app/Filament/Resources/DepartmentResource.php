@@ -6,6 +6,7 @@ use App\Filament\Resources\DepartmentResource\Pages\CreateDepartment;
 use App\Filament\Resources\DepartmentResource\Pages\EditDepartment;
 use App\Filament\Resources\DepartmentResource\Pages\ListDepartments;
 use App\Models\Department;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -29,7 +30,7 @@ class DepartmentResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('manage-departments') ?? false;
+        return Filament::auth()->user()?->can('manage-departments') ?? false;
     }
 
     public static function form(Form $form): Form
