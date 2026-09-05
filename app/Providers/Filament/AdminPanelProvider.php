@@ -34,7 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->pages([Dashboard::class])
-            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.theme')->render())
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.theme')->render() . view('filament.theme-overrides')->render())
             ->middleware([
                 EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class,
                 AuthenticateSession::class, ShareErrorsFromSession::class, VerifyCsrfToken::class,
