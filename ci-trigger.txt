@@ -1,1 +1,0 @@
-CI validation trigger for current page-composition branch.
