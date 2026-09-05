@@ -141,17 +141,35 @@ class UserResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('name')->label('Person')->searchable()->sortable()->weight('semibold'),
-            TextColumn::make('email')->searchable(),
-            TextColumn::make('department.name')->label('Department')->sortable()->placeholder('—'),
-            TextColumn::make('primaryBranch.name')->label('Branch')->sortable()->placeholder('—'),
-            TextColumn::make('roles.name')->badge()->label('Role'),
-            TextColumn::make('status')
-                ->badge()
-                ->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))
-                ->color(fn (?string $state): string => $state === 'active' ? 'success' : 'danger'),
-        ])->defaultSort('name');
+        return $table
+            ->columns([
+                TextColumn::make('name')
+                    ->label('Person')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn (User $record): ?string => $record->email),
+                TextColumn::make('department.name')
+                    ->label('Department')
+                    ->sortable()
+                    ->placeholder('Not assigned'),
+                TextColumn::make('primaryBranch.name')
+                    ->label('Branch')
+                    ->sortable()
+                    ->placeholder('Not assigned'),
+                TextColumn::make('roles.name')
+                    ->badge()
+                    ->label('Role')
+                    ->color('gray'),
+                TextColumn::make('status')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))
+                    ->color(fn (?string $state): string => $state === 'active' ? 'success' : 'danger'),
+            ])
+            ->defaultSort('name')
+            ->striped(false)
+            ->persistSearchInSession()
+            ->persistFiltersInSession();
     }
 
     public static function getPages(): array
