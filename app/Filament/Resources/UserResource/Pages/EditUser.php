@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use Filament\Facades\Filament;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Auth\Access\AuthorizationException;
 
@@ -25,7 +26,7 @@ class EditUser extends EditRecord
 
     protected function beforeSave(): void
     {
-        $actor = auth()->user();
+        $actor = Filament::auth()->user();
         $state = $this->form->getRawState();
 
         if (! $actor?->can('manage-users')) {
@@ -52,7 +53,7 @@ class EditUser extends EditRecord
 
     protected function afterSave(): void
     {
-        $actor = auth()->user();
+        $actor = Filament::auth()->user();
         $state = $this->form->getRawState();
         $role = $state['roles'] ?? 'Staff';
         $branches = array_map('intval', $state['branches'] ?? []);
