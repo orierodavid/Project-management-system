@@ -13,6 +13,7 @@
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-top: 0 !important;
+    display: block !important;
 }
 
 .fi-page {
@@ -21,10 +22,25 @@
     margin-right: auto !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    display: block !important;
 }
 
 .fi-page-content {
     max-width: 1440px !important;
+    width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    display: block !important;
+}
+
+/* Custom pages must center their own content inside the Filament page canvas. */
+.fi-page-content > * {
+    max-width: 100% !important;
+}
+
+.fi-page-content > .pm-attendance-page {
+    width: min(1180px, 100%) !important;
+    max-width: 1180px !important;
     margin-left: auto !important;
     margin-right: auto !important;
 }
@@ -90,6 +106,11 @@
         margin-left: 0 !important;
         margin-right: 0 !important;
         padding-top: 20px !important;
+    }
+
+    .fi-page-content > .pm-attendance-page {
+        width: 100% !important;
+        max-width: none !important;
     }
 }
 
