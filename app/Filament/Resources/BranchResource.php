@@ -18,9 +18,13 @@ use Illuminate\Validation\ValidationException;
 class BranchResource extends Resource
 {
     protected static ?string $model = Branch::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+
     protected static ?string $navigationGroup = 'People';
+
     protected static ?string $navigationLabel = 'Branches';
+
     protected static ?int $navigationSort = 30;
 
     public static function canViewAny(): bool
@@ -43,18 +47,23 @@ class BranchResource extends Resource
     public static function mutateFormDataBeforeCreate(array $data): array
     {
         static::validateCoordinates($data);
+
         return $data;
     }
 
     public static function mutateFormDataBeforeSave(array $data): array
     {
         static::validateCoordinates($data);
+
         return $data;
     }
 
     protected static function validateCoordinates(array $data): void
     {
-        if (! ($data['is_active'] ?? false)) return;
+        if (! ($data['is_active'] ?? false)) {
+            return;
+        }
+
         if ((float) ($data['latitude'] ?? 0) === 0.0 && (float) ($data['longitude'] ?? 0) === 0.0) {
             throw ValidationException::withMessages(['latitude' => 'An active branch must have real GPS coordinates. 0,0 is not a valid configured workplace location.']);
         }
