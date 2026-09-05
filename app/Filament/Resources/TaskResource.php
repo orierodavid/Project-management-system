@@ -152,16 +152,26 @@ class TaskResource extends Resource
             ->columns([
                 TextColumn::make('title')
                     ->label('Task')
-                    ->searchable()->sortable()->limit(45)
+                    ->searchable()->sortable()
+                    ->limit(48)
+                    ->wrap()
                     ->weight('semibold'),
                 TextColumn::make('assignee.name')
                     ->label('Assignee')
                     ->searchable()->sortable()
-                    ->placeholder('Unassigned'),
+                    ->placeholder('Unassigned')
+                    ->wrap(),
                 TextColumn::make('department.name')
                     ->label('Department')
                     ->sortable()
-                    ->placeholder('—'),
+                    ->placeholder('—')
+                    ->wrap(),
+                TextColumn::make('branch.name')
+                    ->label('Branch')
+                    ->sortable()
+                    ->placeholder('All branches')
+                    ->wrap()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('priority')
                     ->badge()
                     ->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))
@@ -186,8 +196,10 @@ class TaskResource extends Resource
                         default => 'gray',
                     }),
                 TextColumn::make('deadline')
+                    ->label('Due')
                     ->dateTime('M j, Y · g:i A')
                     ->sortable()
+                    ->placeholder('No deadline')
                     ->color(fn ($record): string => $record->is_overdue ? 'danger' : 'gray'),
             ])
             ->filters([
@@ -209,7 +221,9 @@ class TaskResource extends Resource
             ->actions([
                 EditAction::make()->iconButton(),
             ])
-            ->defaultSort('deadline');
+            ->defaultSort('deadline')
+            ->defaultPaginationPageOption(25)
+            ->paginated([10, 25, 50, 100]);
     }
 
     public static function getRelations(): array
