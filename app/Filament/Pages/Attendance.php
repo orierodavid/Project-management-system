@@ -18,6 +18,8 @@ class Attendance extends Page
 
     public static function canAccess(): bool
     {
-        return (bool) (auth()->user()?->can('clock-in') || auth()->user()?->can('clock-out'));
+        $user = auth()->user();
+
+        return (bool) ($user?->hasRole('Staff') && ! $user?->hasAnyRole(['Admin', 'Super Admin']) && ($user->can('clock-in') || $user->can('clock-out')));
     }
 }
