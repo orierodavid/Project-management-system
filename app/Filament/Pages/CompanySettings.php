@@ -15,6 +15,7 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Support\Facades\Storage;
 
 class CompanySettings extends Page implements HasForms
 {
@@ -49,7 +50,16 @@ class CompanySettings extends Page implements HasForms
                     ->icon('heroicon-o-building-office-2')
                     ->schema([
                         TextInput::make('company_name')->label('Company name')->required()->maxLength(255),
-                        FileUpload::make('company_logo')->label('Company logo')->disk('public')->directory('company')->image()->maxSize(2048),
+                        FileUpload::make('company_logo')
+                            ->label('Company logo')
+                            ->disk('public')
+                            ->directory('company')
+                            ->visibility('public')
+                            ->image()
+                            ->imagePreviewHeight('120')
+                            ->maxSize(2048)
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'])
+                            ->nullable(),
                     ])
                     ->columns(2),
                 Section::make('Brand appearance')
@@ -95,7 +105,29 @@ class CompanySettings extends Page implements HasForms
 
     public function save(): void
     {
-        Setting::current()->update($this->form->getState());
+        $setting = Setting::current();
+        $state = $this->form->getState();
+
+        // Never erase a working logo when another settings field is saved.
+        // Only replace the stored logo after Filament has successfully persisted a new file.
+        $logo = $state['company_logo'] ?? null;
+        if (filled($logo)) {
+            if (! Storage::disk('public')->exists($logo)) {
+                Notification::make()
+                    ->title('Logo upload did not complete')
+                    ->body('The logo was not stored successfully. Your existing logo and other settings were kept.')
+                    ->danger()
+                    ->send();
+
+                unset($state['company_logo']);
+            } elseif ($setting->company_logo && $setting->company_logo !== $logo && Storage::disk('public')->exists($setting->company_logo)) {
+                Storage::disk('public')->delete($setting->company_logo);
+            }
+        } else {
+            unset($state['company_logo']);
+        }
+
+        $setting->update($state);
 
         Notification::make()->title('Company settings saved')->success()->send();
     }
