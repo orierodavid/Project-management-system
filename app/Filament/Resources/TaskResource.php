@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\TaskResource\Pages\CreateTask;
 use App\Filament\Resources\TaskResource\Pages\EditTask;
 use App\Filament\Resources\TaskResource\Pages\ListTasks;
+use App\Filament\Resources\TaskResource\Pages\TaskBoard;
 use App\Filament\Resources\TaskResource\RelationManagers\AttachmentsRelationManager;
 use App\Filament\Resources\TaskResource\RelationManagers\CommentsRelationManager;
 use App\Models\Branch;
@@ -30,7 +31,11 @@ class TaskResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $navigationGroup = 'Work Management';
+    protected static ?string $navigationGroup = 'Workspace';
+
+    protected static ?string $navigationLabel = 'Tasks';
+
+    protected static ?int $navigationSort = 20;
 
     public static function canViewAny(): bool
     {
@@ -145,12 +150,45 @@ class TaskResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('title')->searchable()->sortable()->limit(45),
-                TextColumn::make('assignee.name')->label('Assigned to')->searchable()->sortable(),
-                TextColumn::make('department.name')->label('Department')->sortable(),
-                TextColumn::make('priority')->badge(),
-                TextColumn::make('status')->badge(),
-                TextColumn::make('deadline')->dateTime()->sortable(),
+                TextColumn::make('title')
+                    ->label('Task')
+                    ->searchable()->sortable()->limit(45)
+                    ->weight('semibold'),
+                TextColumn::make('assignee.name')
+                    ->label('Assignee')
+                    ->searchable()->sortable()
+                    ->placeholder('Unassigned'),
+                TextColumn::make('department.name')
+                    ->label('Department')
+                    ->sortable()
+                    ->placeholder('—'),
+                TextColumn::make('priority')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))
+                    ->color(fn (?string $state): string => match ($state) {
+                        'high' => 'danger',
+                        'medium' => 'warning',
+                        default => 'gray',
+                    }),
+                TextColumn::make('status')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'in_progress' => 'In progress',
+                        'todo' => 'To do',
+                        'review' => 'Review',
+                        'done' => 'Done',
+                        default => ucfirst($state ?? ''),
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
+                        'done' => 'success',
+                        'review' => 'warning',
+                        'in_progress' => 'info',
+                        default => 'gray',
+                    }),
+                TextColumn::make('deadline')
+                    ->dateTime('M j, Y · g:i A')
+                    ->sortable()
+                    ->color(fn ($record): string => $record->is_overdue ? 'danger' : 'gray'),
             ])
             ->filters([
                 SelectFilter::make('status')
@@ -166,11 +204,10 @@ class TaskResource extends Resource
                         'medium' => 'Medium',
                         'high' => 'High',
                     ]),
-                TernaryFilter::make('is_overdue')
-                    ->label('Overdue'),
+                TernaryFilter::make('is_overdue')->label('Overdue'),
             ])
             ->actions([
-                EditAction::make(),
+                EditAction::make()->iconButton(),
             ])
             ->defaultSort('deadline');
     }
@@ -187,6 +224,7 @@ class TaskResource extends Resource
     {
         return [
             'index' => ListTasks::route('/'),
+            'board' => TaskBoard::route('/board'),
             'create' => CreateTask::route('/create'),
             'edit' => EditTask::route('/{record}/edit'),
         ];
