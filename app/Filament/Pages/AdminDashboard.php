@@ -28,10 +28,17 @@ class AdminDashboard extends BaseDashboard
         return 'dashboard';
     }
 
+    public static function canAccess(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return (bool) ($user && $user->isActive() && $user->hasAnyRole(['Super Admin', 'Admin']));
+    }
+
     public function getViewData(): array
     {
         $user = Filament::auth()->user();
-        abort_unless($user && $user->isActive() && $user->hasAnyRole(['Super Admin', 'Admin']), 403);
+        abort_unless(static::canAccess(), 403);
         auth()->setUser($user);
 
         $today = Carbon::today();
