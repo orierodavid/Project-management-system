@@ -1,12 +1,2 @@
-{{-- Global product presentation layer. Business logic, routes, permissions and page behavior remain unchanged. --}}
-@include('filament.benchmark-theme')
-@include('filament.product-shell-style')
-@include('filament.dashboard-polish')
-@include('filament.product-consistency')
-@include('filament.product-ux-polish')
-@include('filament.product-responsive')
-@include('filament.compact-ui')
-@include('filament.dynamic-brand-theme')
-@include('filament.desktop-responsive-fix')
-@include('filament.modern-form-style')
-@include('filament.control-foreground-fix')
+{{-- Global UI presentation entry point. Application logic and behavior are unchanged. --}}
+@include('filament.design-system')
