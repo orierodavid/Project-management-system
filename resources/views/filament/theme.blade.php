@@ -4,3 +4,4 @@
 @include('filament.dashboard-polish')
 @include('filament.product-consistency')
 @include('filament.product-ux-polish')
+@include('filament.product-responsive')
