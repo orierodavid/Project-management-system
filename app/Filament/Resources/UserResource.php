@@ -8,6 +8,7 @@ use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Models\Branch;
 use App\Models\Department;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -32,19 +33,19 @@ class UserResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('manage-users') ?? false;
+        return Filament::auth()->user()?->can('manage-users') ?? false;
     }
 
     public static function canCreate(): bool
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user?->hasRole('Super Admin') || $user?->hasRole('Admin'));
     }
 
     public static function canEdit($record): bool
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         if (! $user?->can('manage-users')) {
             return false;
@@ -65,14 +66,14 @@ class UserResource extends Resource
 
     public static function canDelete($record): bool
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user?->hasRole('Super Admin') && (int) $user->id !== (int) $record->id);
     }
 
     public static function getEloquentQuery(): Builder
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
         $query = parent::getEloquentQuery()->with(['department', 'primaryBranch', 'roles']);
 
         if ($user?->hasRole('Admin')) {
@@ -89,7 +90,7 @@ class UserResource extends Resource
 
     public static function form(Form $form): Form
     {
-        $actor = auth()->user();
+        $actor = Filament::auth()->user();
         $isSuperAdmin = (bool) $actor?->hasRole('Super Admin');
         $branchIds = $actor?->branches()->pluck('branches.id')->all() ?? [];
         $branchQuery = Branch::query()->where('is_active', true)->orderBy('name');
