@@ -8,3 +8,4 @@
 @include('filament.compact-ui')
 @include('filament.dynamic-brand-theme')
 @include('filament.desktop-responsive-fix')
+@include('filament.modern-form-style')
