@@ -48,15 +48,11 @@ class User extends Authenticatable implements FilamentUser
             return false;
         }
 
-        if ($panel->getId() === 'admin') {
-            return $this->hasAnyRole(['Super Admin', 'Admin']);
-        }
-
-        if ($panel->getId() === 'staff') {
-            return $this->hasAnyRole(['Super Admin', 'Admin', 'Staff']);
-        }
-
-        return false;
+        return match ($panel->getId()) {
+            'admin' => $this->hasAnyRole(['Super Admin', 'Admin']),
+            'staff' => $this->hasRole('Staff'),
+            default => false,
+        };
     }
 
     public function department(): BelongsTo
