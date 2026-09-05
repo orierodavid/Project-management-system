@@ -25,7 +25,8 @@ class Dashboard extends BaseDashboard
 
     public function getViewData(): array
     {
-        $panelId = Filament::getCurrentPanel()?->getId();
+        $panel = Filament::getCurrentPanel();
+        $panelId = $panel?->getId() ?? 'admin';
         $user = Filament::auth()->user();
         $isStaff = $panelId === 'staff';
         $today = Carbon::today();
@@ -39,6 +40,7 @@ class Dashboard extends BaseDashboard
 
             return [
                 'mode' => 'staff',
+                'currentUser' => $user,
                 'taskCount' => (clone $tasks)->whereNotIn('status', ['done'])->count(),
                 'completedCount' => (clone $tasks)->where('status', 'done')->count(),
                 'dueSoonCount' => (clone $tasks)->whereNotNull('deadline')->whereBetween('deadline', [now(), now()->copy()->addDays(2)])->whereNot('status', 'done')->count(),
@@ -77,6 +79,7 @@ class Dashboard extends BaseDashboard
 
         return [
             'mode' => 'admin',
+            'currentUser' => $user,
             'userCount' => User::query()->where('status', 'active')->count(),
             'taskCount' => (clone $taskQuery)->whereNot('status', 'done')->count(),
             'overdueCount' => (clone $taskQuery)->where('is_overdue', true)->whereNot('status', 'done')->count(),
