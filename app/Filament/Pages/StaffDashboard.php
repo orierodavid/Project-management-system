@@ -9,10 +9,15 @@ use Illuminate\Support\Carbon;
 class StaffDashboard extends BaseDashboard
 {
     protected static string $view = 'filament.pages.dashboard';
+
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
+
     protected static ?string $navigationLabel = 'Dashboard';
+
     protected static ?string $navigationGroup = 'Workspace';
+
     protected static ?int $navigationSort = 1;
+
     protected static ?string $title = 'Dashboard';
 
     public static function getSlug(): string
