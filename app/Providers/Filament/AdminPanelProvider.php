@@ -26,7 +26,7 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()->id('admin')->path('admin')->login(Login::class)
+            ->default()->id('admin')->path('admin')->login(Login::class)->authGuard('admin')
             ->brandName(fn (): string => Setting::current()->company_name ?: 'Project Management System')
             ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
             ->colors(['primary' => Color::hex(Setting::current()->primary_color ?: '#2563EB')])
