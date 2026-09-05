@@ -10,6 +10,8 @@ class StaffDashboard extends BaseDashboard
 {
     protected static string $view = 'filament.pages.dashboard';
 
+    protected static string $routePath = '';
+
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
 
     protected static ?string $navigationLabel = 'Dashboard';
@@ -19,11 +21,6 @@ class StaffDashboard extends BaseDashboard
     protected static ?int $navigationSort = 1;
 
     protected static ?string $title = 'Dashboard';
-
-    public static function getSlug(): string
-    {
-        return 'dashboard';
-    }
 
     public static function canAccess(): bool
     {
