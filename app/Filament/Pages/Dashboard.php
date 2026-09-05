@@ -56,6 +56,23 @@ class Dashboard extends BaseDashboard
             $attendanceQuery->whereIn('branch_id', $branchIds);
         }
 
+        $attendanceTrend = [];
+        for ($offset = 6; $offset >= 0; $offset--) {
+            $date = $today->copy()->subDays($offset);
+            $attendanceTrend[] = [
+                'label' => $date->format('D'),
+                'date' => $date->format('M j'),
+                'count' => (clone $attendanceQuery)->whereDate('clock_in_at', $date)->count(),
+            ];
+        }
+
+        $taskPipeline = collect([
+            'todo' => ['label' => 'To do', 'count' => (clone $taskQuery)->where('status', 'todo')->count()],
+            'in_progress' => ['label' => 'In progress', 'count' => (clone $taskQuery)->where('status', 'in_progress')->count()],
+            'review' => ['label' => 'Review', 'count' => (clone $taskQuery)->where('status', 'review')->count()],
+            'done' => ['label' => 'Completed', 'count' => (clone $taskQuery)->where('status', 'done')->count()],
+        ])->values()->all();
+
         return [
             'mode' => 'admin',
             'userCount' => User::query()->where('status', 'active')->count(),
@@ -63,6 +80,8 @@ class Dashboard extends BaseDashboard
             'overdueCount' => (clone $taskQuery)->where('is_overdue', true)->whereNot('status', 'done')->count(),
             'presentCount' => (clone $attendanceQuery)->whereDate('clock_in_at', $today)->count(),
             'recentTasks' => (clone $taskQuery)->with('assignee')->latest()->limit(6)->get(),
+            'attendanceTrend' => $attendanceTrend,
+            'taskPipeline' => $taskPipeline,
         ];
     }
 }
