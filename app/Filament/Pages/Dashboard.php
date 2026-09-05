@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\AttendanceRecord;
 use App\Models\Task;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Support\Carbon;
 
@@ -24,8 +25,9 @@ class Dashboard extends BaseDashboard
 
     public function getViewData(): array
     {
-        $user = auth()->user();
-        $isStaff = $user?->hasRole('Staff') && ! $user?->hasAnyRole(['Admin', 'Super Admin']);
+        $panelId = Filament::getCurrentPanel()?->getId();
+        $user = Filament::auth()->user();
+        $isStaff = $panelId === 'staff';
         $today = Carbon::today();
 
         if ($isStaff) {
