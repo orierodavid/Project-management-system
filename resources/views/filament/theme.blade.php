@@ -3,3 +3,4 @@
 @include('filament.product-shell-style')
 @include('filament.dashboard-polish')
 @include('filament.product-consistency')
+@include('filament.product-ux-polish')
