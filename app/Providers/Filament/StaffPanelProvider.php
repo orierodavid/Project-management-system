@@ -26,7 +26,7 @@ class StaffPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('staff')->path('staff')->login(StaffLogin::class)
+            ->id('staff')->path('staff')->login(StaffLogin::class)->authGuard('staff')
             ->brandName(fn (): string => Setting::current()->company_name ?: 'Project Management System')
             ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
             ->colors(['primary' => Color::hex(Setting::current()->primary_color ?: '#2563EB')])
