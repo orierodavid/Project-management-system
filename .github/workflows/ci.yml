@@ -27,17 +27,17 @@ jobs:
       - name: Copy environment
         run: cp .env.example .env
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress
-
-      - name: Generate application key
-        run: php artisan key:generate --force
-
       - name: Prepare SQLite database
         run: |
           touch database/database.sqlite
           sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' .env
           sed -i '/^DB_HOST=/d;/^DB_PORT=/d;/^DB_DATABASE=/d;/^DB_USERNAME=/d;/^DB_PASSWORD=/d' .env
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Generate application key
+        run: php artisan key:generate --force
 
       - name: Run migrations
         run: php artisan migrate --force
