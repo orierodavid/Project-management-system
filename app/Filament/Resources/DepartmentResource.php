@@ -18,10 +18,10 @@ use Filament\Tables\Table;
 class DepartmentResource extends Resource
 {
     protected static ?string $model = Department::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-users';
-
-    protected static ?string $navigationGroup = 'Organization';
+    protected static ?string $navigationGroup = 'People';
+    protected static ?string $navigationLabel = 'Departments';
+    protected static ?int $navigationSort = 20;
 
     public static function canViewAny(): bool
     {
@@ -40,10 +40,10 @@ class DepartmentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            TextColumn::make('name')->searchable()->sortable(),
+            TextColumn::make('name')->searchable()->sortable()->weight('semibold'),
             TextColumn::make('users_count')->counts('users')->label('Staff'),
             IconColumn::make('is_active')->boolean(),
-            TextColumn::make('created_at')->dateTime()->sortable(),
+            TextColumn::make('created_at')->dateTime('M j, Y')->sortable(),
         ])->defaultSort('name');
     }
 
