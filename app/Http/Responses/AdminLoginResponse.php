@@ -12,6 +12,6 @@ class AdminLoginResponse implements LoginResponseContract
     {
         session()->forget('url.intended');
 
-        return redirect()->to('/admin/dashboard');
+        return redirect()->to('/admin');
     }
 }
