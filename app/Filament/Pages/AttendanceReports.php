@@ -23,9 +23,11 @@ class AttendanceReports extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar-square';
 
-    protected static ?string $navigationGroup = 'Reports';
+    protected static ?string $navigationGroup = 'Insights';
 
     protected static ?string $navigationLabel = 'Attendance Reports';
+
+    protected static ?string $title = 'Attendance';
 
     protected static string $view = 'filament.pages.attendance-reports';
 
@@ -84,6 +86,32 @@ class AttendanceReports extends Page implements HasForms
     public function getRecords(): array
     {
         return $this->query()->with(['user', 'branch'])->latest('clock_in_at')->get()->all();
+    }
+
+    public function getSummary(): array
+    {
+        $records = collect($this->getRecords());
+
+        return [
+            'records' => $records->count(),
+            'working' => $records->whereNull('clock_out_at')->count(),
+            'completed' => $records->whereNotNull('clock_out_at')->count(),
+            'late' => $records->where('status', 'late')->count(),
+        ];
+    }
+
+    public function getDuration($record): string
+    {
+        if (! $record->clock_in_at) {
+            return '—';
+        }
+
+        $end = $record->clock_out_at ?: now();
+        $minutes = max(0, $record->clock_in_at->diffInMinutes($end));
+        $hours = intdiv($minutes, 60);
+        $remaining = $minutes % 60;
+
+        return $hours > 0 ? sprintf('%dh %02dm', $hours, $remaining) : sprintf('%dm', $remaining);
     }
 
     public function export()

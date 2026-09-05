@@ -2,12 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\Login;
+use App\Filament\Pages\Dashboard;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -25,9 +26,7 @@ class StaffPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('staff')
-            ->path('staff')
-            ->login()
+            ->id('staff')->path('staff')->login(Login::class)
             ->brandName(fn (): string => Setting::current()->company_name ?: 'Project Management System')
             ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
             ->colors(['primary' => Color::Blue])
@@ -35,23 +34,12 @@ class StaffPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->pages([Dashboard::class])
-            ->renderHook(
-                PanelsRenderHook::HEAD_END,
-                fn (): string => view('filament.theme')->render(),
-            )
+            ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.theme')->render())
             ->middleware([
-                EncryptCookies::class,
-                AddQueuedCookiesToResponse::class,
-                StartSession::class,
-                AuthenticateSession::class,
-                ShareErrorsFromSession::class,
-                VerifyCsrfToken::class,
-                SubstituteBindings::class,
-                DisableBladeIconComponents::class,
-                DispatchServingFilamentEvent::class,
+                EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class,
+                AuthenticateSession::class, ShareErrorsFromSession::class, VerifyCsrfToken::class,
+                SubstituteBindings::class, DisableBladeIconComponents::class, DispatchServingFilamentEvent::class,
             ])
-            ->authMiddleware([
-                Authenticate::class,
-            ]);
+            ->authMiddleware([Authenticate::class]);
     }
 }
