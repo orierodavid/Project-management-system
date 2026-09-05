@@ -29,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()->id('admin')->path('admin')->login(Login::class)
             ->brandName(fn (): string => Setting::current()->company_name ?: 'Project Management System')
             ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
-            ->colors(['primary' => Color::Blue])
+            ->colors(['primary' => Color::hex(Setting::current()->primary_color ?: '#2563EB')])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
