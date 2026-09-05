@@ -28,6 +28,12 @@ class Dashboard extends BaseDashboard
         $panel = Filament::getCurrentPanel();
         $panelId = $panel?->getId() ?? 'admin';
         $user = Filament::auth()->user();
+
+        // The dashboard Blade view is shared by both panels and still uses Laravel's
+        // default auth() helper. Bind that helper to the authenticated panel user
+        // for this request so admin and staff can never cross-render identities.
+        auth()->setUser($user);
+
         $isStaff = $panelId === 'staff';
         $today = Carbon::today();
 
