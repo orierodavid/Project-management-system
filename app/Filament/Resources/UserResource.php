@@ -21,9 +21,13 @@ use Spatie\Permission\Models\Role;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+
     protected static ?string $navigationGroup = 'People';
+
     protected static ?string $navigationLabel = 'Users';
+
     protected static ?int $navigationSort = 10;
 
     public static function canViewAny(): bool
@@ -34,22 +38,35 @@ class UserResource extends Resource
     public static function canCreate(): bool
     {
         $user = auth()->user();
+
         return (bool) ($user?->hasRole('Super Admin') || $user?->hasRole('Admin'));
     }
 
     public static function canEdit($record): bool
     {
         $user = auth()->user();
-        if (! $user?->can('manage-users')) return false;
-        if ($user->hasRole('Super Admin')) return true;
-        if (! $user->hasRole('Admin') || ! $record->hasRole('Staff')) return false;
+
+        if (! $user?->can('manage-users')) {
+            return false;
+        }
+
+        if ($user->hasRole('Super Admin')) {
+            return true;
+        }
+
+        if (! $user->hasRole('Admin') || ! $record->hasRole('Staff')) {
+            return false;
+        }
+
         $branchIds = $user->branches()->pluck('branches.id');
+
         return $record->branches()->whereIn('branches.id', $branchIds)->exists() || $branchIds->contains($record->primary_branch_id);
     }
 
     public static function canDelete($record): bool
     {
         $user = auth()->user();
+
         return (bool) ($user?->hasRole('Super Admin') && (int) $user->id !== (int) $record->id);
     }
 
@@ -57,6 +74,7 @@ class UserResource extends Resource
     {
         $user = auth()->user();
         $query = parent::getEloquentQuery()->with(['department', 'primaryBranch', 'roles']);
+
         if ($user?->hasRole('Admin')) {
             $branchIds = $user->branches()->pluck('branches.id');
             $query->whereHas('roles', fn (Builder $q) => $q->where('name', 'Staff'))
@@ -65,6 +83,7 @@ class UserResource extends Resource
                         ->orWhereHas('branches', fn (Builder $q) => $q->whereIn('branches.id', $branchIds));
                 });
         }
+
         return $query;
     }
 
@@ -74,17 +93,49 @@ class UserResource extends Resource
         $isSuperAdmin = (bool) $actor?->hasRole('Super Admin');
         $branchIds = $actor?->branches()->pluck('branches.id')->all() ?? [];
         $branchQuery = Branch::query()->where('is_active', true)->orderBy('name');
-        if (! $isSuperAdmin) $branchQuery->whereIn('id', $branchIds);
+
+        if (! $isSuperAdmin) {
+            $branchQuery->whereIn('id', $branchIds);
+        }
+
         return $form->schema([
             TextInput::make('name')->required()->maxLength(255),
             TextInput::make('email')->email()->required()->unique(ignoreRecord: true),
             TextInput::make('phone')->tel()->maxLength(30),
-            TextInput::make('password')->password()->revealable()->required(fn (string $operation): bool => $operation === 'create')->dehydrated(fn (?string $state): bool => filled($state))->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
-            Select::make('department_id')->label('Department')->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload(),
-            Select::make('primary_branch_id')->label('Primary branch')->options($branchQuery->pluck('name', 'id'))->searchable()->preload()->required(),
-            Select::make('status')->options(['active' => 'Active', 'suspended' => 'Suspended'])->required()->default('active'),
-            Select::make('roles')->label('Role')->options($isSuperAdmin ? Role::query()->orderBy('name')->pluck('name', 'name') : ['Staff' => 'Staff'])->required()->default('Staff')->dehydrated(false),
-            Select::make('branches')->label('Branch access')->multiple()->options($branchQuery->pluck('name', 'id'))->preload()->searchable()->dehydrated(false),
+            TextInput::make('password')
+                ->password()
+                ->revealable()
+                ->required(fn (string $operation): bool => $operation === 'create')
+                ->dehydrated(fn (?string $state): bool => filled($state))
+                ->dehydrateStateUsing(fn (string $state): string => Hash::make($state)),
+            Select::make('department_id')
+                ->label('Department')
+                ->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                ->searchable()
+                ->preload(),
+            Select::make('primary_branch_id')
+                ->label('Primary branch')
+                ->options($branchQuery->pluck('name', 'id'))
+                ->searchable()
+                ->preload()
+                ->required(),
+            Select::make('status')
+                ->options(['active' => 'Active', 'suspended' => 'Suspended'])
+                ->required()
+                ->default('active'),
+            Select::make('roles')
+                ->label('Role')
+                ->options($isSuperAdmin ? Role::query()->orderBy('name')->pluck('name', 'name') : ['Staff' => 'Staff'])
+                ->required()
+                ->default('Staff')
+                ->dehydrated(false),
+            Select::make('branches')
+                ->label('Branch access')
+                ->multiple()
+                ->options($branchQuery->pluck('name', 'id'))
+                ->preload()
+                ->searchable()
+                ->dehydrated(false),
         ]);
     }
 
@@ -96,12 +147,19 @@ class UserResource extends Resource
             TextColumn::make('department.name')->label('Department')->sortable()->placeholder('—'),
             TextColumn::make('primaryBranch.name')->label('Branch')->sortable()->placeholder('—'),
             TextColumn::make('roles.name')->badge()->label('Role'),
-            TextColumn::make('status')->badge()->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))->color(fn (?string $state): string => $state === 'active' ? 'success' : 'danger'),
+            TextColumn::make('status')
+                ->badge()
+                ->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))
+                ->color(fn (?string $state): string => $state === 'active' ? 'success' : 'danger'),
         ])->defaultSort('name');
     }
 
     public static function getPages(): array
     {
-        return ['index' => ListUsers::route('/'), 'create' => CreateUser::route('/create'), 'edit' => EditUser::route('/{record}/edit')];
+        return [
+            'index' => ListUsers::route('/'),
+            'create' => CreateUser::route('/create'),
+            'edit' => EditUser::route('/{record}/edit'),
+        ];
     }
 }
