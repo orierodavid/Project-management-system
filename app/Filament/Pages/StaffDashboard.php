@@ -25,10 +25,17 @@ class StaffDashboard extends BaseDashboard
         return 'dashboard';
     }
 
+    public static function canAccess(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return (bool) ($user && $user->isActive() && $user->hasRole('Staff'));
+    }
+
     public function getViewData(): array
     {
         $user = Filament::auth()->user();
-        abort_unless($user && $user->isActive() && $user->hasRole('Staff'), 403);
+        abort_unless(static::canAccess(), 403);
         auth()->setUser($user);
 
         $today = Carbon::today();
