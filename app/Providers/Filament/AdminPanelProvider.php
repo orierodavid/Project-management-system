@@ -7,13 +7,11 @@ use App\Filament\Pages\AdminDashboard;
 use App\Filament\Pages\Attendance;
 use App\Filament\Pages\AttendanceReports;
 use App\Filament\Pages\CompanySettings;
-use App\Http\Responses\AdminLoginResponse;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -32,9 +30,6 @@ class AdminPanelProvider extends PanelProvider
     {
         return $panel
             ->default()->id('admin')->path('admin')->login(Login::class)->authGuard('admin')
-            ->bootUsing(function (): void {
-                app()->bind(LoginResponse::class, AdminLoginResponse::class);
-            })
             ->brandName(fn (): string => Setting::current()->company_name ?: 'Project Management System')
             ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
             ->colors(['primary' => Color::hex(Setting::current()->primary_color ?: '#2563EB')])
