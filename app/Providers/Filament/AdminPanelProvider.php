@@ -4,6 +4,9 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\Login;
 use App\Filament\Pages\AdminDashboard;
+use App\Filament\Pages\Attendance;
+use App\Filament\Pages\AttendanceReports;
+use App\Filament\Pages\CompanySettings;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -31,9 +34,13 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
             ->colors(['primary' => Color::hex(Setting::current()->primary_color ?: '#2563EB')])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->pages([AdminDashboard::class])
+            ->pages([
+                AdminDashboard::class,
+                Attendance::class,
+                AttendanceReports::class,
+                CompanySettings::class,
+            ])
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.theme')->render())
             ->renderHook(PanelsRenderHook::BODY_START, fn (): string => view('filament.product-shell')->render())
             ->middleware([
