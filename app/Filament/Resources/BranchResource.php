@@ -6,6 +6,7 @@ use App\Filament\Resources\BranchResource\Pages\CreateBranch;
 use App\Filament\Resources\BranchResource\Pages\EditBranch;
 use App\Filament\Resources\BranchResource\Pages\ListBranches;
 use App\Models\Branch;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
@@ -29,7 +30,7 @@ class BranchResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('manage-branches') ?? false;
+        return Filament::auth()->user()?->can('manage-branches') ?? false;
     }
 
     public static function form(Form $form): Form
