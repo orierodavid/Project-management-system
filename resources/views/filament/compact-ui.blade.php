@@ -1,7 +1,10 @@
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 /* Compact global presentation layer: scales the existing UI without changing behavior. */
 html{font-size:14px!important}
-body{font-size:13px!important;line-height:1.42!important}
+body{font-family:'Poppins',ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif!important;font-size:13px!important;line-height:1.42!important}
+*,*::before,*::after{font-family:inherit}
 .fi-main-ctn{padding-left:18px!important;padding-right:18px!important}
 .fi-main-ctn>.fi-page,.fi-page,.fi-header{max-width:1320px!important}
 .fi-header{padding-top:10px!important;padding-bottom:12px!important}
@@ -65,6 +68,23 @@ body{font-size:13px!important;line-height:1.42!important}
 .pm-task-card-meta{gap:6px;margin-top:7px!important;font-size:9px!important}
 .pm-task-card-footer{gap:6px;margin-top:8px;padding-top:8px;font-size:9px!important}
 .pm-avatar{width:20px;height:20px;font-size:8px!important}
+
+/* Task creation/edit modal: readable fields and comfortable composition */
+.fi-modal-window{width:min(760px,calc(100vw - 32px))!important;max-width:760px!important;max-height:calc(100vh - 32px)!important;overflow:hidden!important}
+.fi-modal-header{padding:18px 22px!important;border-bottom:1px solid #eef0f3!important}
+.fi-modal-content{padding:20px 22px!important;overflow-y:auto!important;overflow-x:hidden!important}
+.fi-modal-footer{padding:14px 22px!important;border-top:1px solid #eef0f3!important}
+.fi-modal-content .fi-fo-grid,.fi-modal-content .fi-fo-component-ctn{width:100%!important;min-width:0!important}
+.fi-modal-content .fi-fo-field-wrp{min-width:0!important}
+.fi-input-wrp{background:#fff!important;border-color:#d0d5dd!important}
+.fi-input-wrp input,.fi-input-wrp textarea,.fi-input-wrp select,
+.fi-input,.fi-select,.fi-textarea,.fi-fo-text-input,.fi-fo-select,.fi-fo-textarea{
+  color:#101828!important;background:#fff!important;caret-color:#2563eb!important;-webkit-text-fill-color:#101828!important;font-family:'Poppins',ui-sans-serif,system-ui,sans-serif!important
+}
+.fi-input-wrp input::placeholder,.fi-input-wrp textarea::placeholder,.fi-input::placeholder,.fi-textarea::placeholder{color:#98a2b3!important;-webkit-text-fill-color:#98a2b3!important;opacity:1!important}
+.fi-fo-textarea textarea,.fi-input-wrp textarea,textarea.fi-textarea{min-height:150px!important;padding:12px 13px!important;resize:vertical!important;font-size:12px!important;line-height:1.65!important}
+.fi-modal-header-heading{font-family:'Poppins',sans-serif!important;font-size:18px!important;font-weight:700!important}
+
 @media(max-width:1100px){.pm-kanban{grid-template-columns:repeat(2,minmax(205px,1fr))!important}}
-@media(max-width:760px){.fi-main-ctn{padding-left:12px!important;padding-right:12px!important}.fi-main-ctn>.fi-page,.fi-page{max-width:none!important}.fi-header-heading{font-size:21px!important}}
+@media(max-width:760px){.fi-main-ctn{padding-left:12px!important;padding-right:12px!important}.fi-main-ctn>.fi-page,.fi-page{max-width:none!important}.fi-header-heading{font-size:21px!important}.fi-modal-window{width:calc(100vw - 24px)!important;max-height:calc(100vh - 24px)!important}.fi-modal-content{padding:16px 15px!important}.fi-modal-header,.fi-modal-footer{padding-left:15px!important;padding-right:15px!important}.fi-fo-textarea textarea,.fi-input-wrp textarea,textarea.fi-textarea{min-height:130px!important}}
 </style>
