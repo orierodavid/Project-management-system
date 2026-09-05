@@ -71,13 +71,30 @@ class BranchResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table->columns([
-            TextColumn::make('name')->searchable()->sortable()->weight('semibold'),
-            TextColumn::make('address')->limit(35)->placeholder('—'),
-            TextColumn::make('radius_meters')->label('Radius')->suffix(' m')->sortable(),
-            IconColumn::make('is_active')->boolean(),
-            TextColumn::make('created_at')->dateTime('M j, Y')->sortable(),
-        ])->defaultSort('name');
+        return $table
+            ->columns([
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('semibold')
+                    ->description(fn (Branch $record): ?string => $record->address),
+                TextColumn::make('radius_meters')
+                    ->label('Geofence')
+                    ->suffix(' m')
+                    ->sortable()
+                    ->badge()
+                    ->color('gray'),
+                IconColumn::make('is_active')
+                    ->boolean()
+                    ->label('Status'),
+                TextColumn::make('created_at')
+                    ->dateTime('M j, Y')
+                    ->sortable()
+                    ->label('Created'),
+            ])
+            ->defaultSort('name')
+            ->striped(false)
+            ->persistSearchInSession();
     }
 
     public static function getPages(): array
