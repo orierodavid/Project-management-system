@@ -24,6 +24,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Str;
 
 class TaskResource extends Resource
 {
@@ -153,14 +154,17 @@ class TaskResource extends Resource
                 TextColumn::make('title')
                     ->label('Task')
                     ->searchable()->sortable()->limit(45)
+                    ->description(fn (Task $record): string => Str::limit(strip_tags((string) $record->description), 64))
                     ->weight('semibold'),
                 TextColumn::make('assignee.name')
                     ->label('Assignee')
                     ->searchable()->sortable()
+                    ->description(fn (Task $record): ?string => $record->assignee?->email)
                     ->placeholder('Unassigned'),
                 TextColumn::make('department.name')
                     ->label('Department')
                     ->sortable()
+                    ->description(fn (Task $record): ?string => $record->branch?->name)
                     ->placeholder('—'),
                 TextColumn::make('priority')
                     ->badge()
@@ -186,9 +190,11 @@ class TaskResource extends Resource
                         default => 'gray',
                     }),
                 TextColumn::make('deadline')
+                    ->label('Due')
                     ->dateTime('M j, Y · g:i A')
                     ->sortable()
-                    ->color(fn ($record): string => $record->is_overdue ? 'danger' : 'gray'),
+                    ->color(fn ($record): string => $record->is_overdue ? 'danger' : 'gray')
+                    ->description(fn ($record): string => $record->is_overdue ? 'Overdue' : ($record->deadline?->diffForHumans() ?? 'No deadline')),
             ])
             ->filters([
                 SelectFilter::make('status')
