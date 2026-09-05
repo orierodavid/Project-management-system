@@ -29,12 +29,19 @@ class Dashboard extends BaseDashboard
         $panelId = $panel?->getId() ?? 'admin';
         $user = Filament::auth()->user();
 
-        // The dashboard Blade view is shared by both panels and still uses Laravel's
-        // default auth() helper. Bind that helper to the authenticated panel user
-        // for this request so admin and staff can never cross-render identities.
-        auth()->setUser($user);
+        abort_unless($user && $user->isActive(), 403);
 
+        // Panel identity is authoritative. Staff is the ONLY role allowed to
+        // receive the staff dashboard. Super Admin and Admin always receive
+        // the admin dashboard, even if other role data exists on the account.
         $isStaff = $panelId === 'staff';
+
+        if ($isStaff) {
+            abort_unless($user->hasRole('Staff'), 403);
+        } else {
+            abort_unless($panelId === 'admin' && $user->hasAnyRole(['Super Admin', 'Admin']), 403);
+        }
+
         $today = Carbon::today();
 
         if ($isStaff) {
@@ -55,11 +62,11 @@ class Dashboard extends BaseDashboard
             ];
         }
 
-        $branchIds = $user?->branches()->pluck('branches.id') ?? collect();
+        $branchIds = $user->branches()->pluck('branches.id');
         $taskQuery = Task::query();
         $attendanceQuery = AttendanceRecord::query();
 
-        if ($user && ! $user->hasRole('Super Admin')) {
+        if (! $user->hasRole('Super Admin')) {
             $taskQuery->where(function ($query) use ($branchIds) {
                 $query->whereIn('branch_id', $branchIds)->orWhereNull('branch_id');
             });
