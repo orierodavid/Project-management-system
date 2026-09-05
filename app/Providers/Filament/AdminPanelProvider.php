@@ -7,6 +7,10 @@ use App\Filament\Pages\AdminDashboard;
 use App\Filament\Pages\Attendance;
 use App\Filament\Pages\AttendanceReports;
 use App\Filament\Pages\CompanySettings;
+use App\Filament\Resources\BranchResource;
+use App\Filament\Resources\DepartmentResource;
+use App\Filament\Resources\TaskResource;
+use App\Filament\Resources\UserResource;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -33,7 +37,12 @@ class AdminPanelProvider extends PanelProvider
             ->brandName(fn (): string => Setting::current()->company_name ?: 'Project Management System')
             ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
             ->colors(['primary' => Color::hex(Setting::current()->primary_color ?: '#2563EB')])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->resources([
+                BranchResource::class,
+                DepartmentResource::class,
+                TaskResource::class,
+                UserResource::class,
+            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->pages([
                 AdminDashboard::class,
