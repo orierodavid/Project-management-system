@@ -19,7 +19,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Session\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -35,6 +35,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->pages([Dashboard::class])
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.theme')->render())
+            ->renderHook(PanelsRenderHook::BODY_START, fn (): string => view('filament.product-shell')->render())
             ->middleware([
                 EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class,
                 AuthenticateSession::class, ShareErrorsFromSession::class, VerifyCsrfToken::class,
