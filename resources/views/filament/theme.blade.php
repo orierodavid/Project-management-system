@@ -2,3 +2,4 @@
 @include('filament.benchmark-theme')
 @include('filament.product-shell-style')
 @include('filament.dashboard-polish')
+@include('filament.product-consistency')
