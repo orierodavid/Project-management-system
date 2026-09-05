@@ -13,7 +13,7 @@ class AdminDashboard extends BaseDashboard
 {
     protected static string $view = 'filament.pages.dashboard';
 
-    protected static string $routePath = '';
+    protected static string $routePath = 'dashboard';
 
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
 
@@ -29,7 +29,7 @@ class AdminDashboard extends BaseDashboard
     {
         $user = Filament::auth()->user();
 
-        return (bool) ($user && $user->isActive() && $user->hasAnyRole(['Super Admin', 'Admin']));
+        return (bool) ($user && $user->isActive() && ($user->hasRole('Super Admin') || $user->hasRole('Admin')) && ! $user->hasRole('Staff'));
     }
 
     public function getViewData(): array
