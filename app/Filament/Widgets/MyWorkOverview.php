@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Setting;
 use App\Models\Task;
+use Filament\Facades\Filament;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Carbon;
@@ -12,7 +13,7 @@ class MyWorkOverview extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
         $tasks = Task::query();
 
         if ($user?->hasRole('Staff')) {
