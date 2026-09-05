@@ -7,3 +7,4 @@
 @include('filament.product-responsive')
 @include('filament.compact-ui')
 @include('filament.dynamic-brand-theme')
+@include('filament.desktop-responsive-fix')
