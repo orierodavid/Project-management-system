@@ -36,6 +36,22 @@ color:var(--pm-form-ink)!important;background:transparent!important;opacity:1!im
 .fi-dropdown-list-item{min-height:40px!important;padding:9px 12px!important;border-radius:7px!important}
 .fi-dropdown-panel{border:1px solid #e2e7ef!important;border-radius:11px!important;background:#fff!important;box-shadow:0 18px 48px rgba(15,23,42,.14)!important}
 
+/* GLOBAL TABLE SEARCH + FILTER TOOLBAR: keep search and dropdown/filter controls on one product-style row. */
+.fi-ta-header-toolbar{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;flex-wrap:wrap!important;min-width:0!important}
+.fi-ta-header-toolbar > *{min-width:0!important}
+.fi-ta-search-field{flex:1 1 260px!important;min-width:220px!important;max-width:560px!important}
+.fi-ta-search-field .fi-input-wrp{min-height:42px!important;background:#fff!important;border:1px solid var(--pm-form-border)!important;border-radius:9px!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important}
+.fi-ta-search-field input{font-family:'Poppins',sans-serif!important;color:var(--pm-form-ink)!important;font-size:12px!important;font-weight:500!important;background:transparent!important}
+.fi-ta-search-field input::placeholder{color:#9aa3b2!important;opacity:1!important}
+.fi-ta-filters-trigger,.fi-ta-header-toolbar .fi-btn{min-height:42px!important;border-radius:9px!important;font-family:'Poppins',sans-serif!important;font-size:11px!important;font-weight:600!important}
+.fi-ta-filters-trigger{border:1px solid var(--pm-form-border)!important;background:#fff!important;color:var(--pm-form-ink)!important;box-shadow:0 1px 2px rgba(15,23,42,.04)!important}
+.fi-ta-filters-trigger:hover{border-color:#b8c1cf!important;background:#fafbfc!important}
+.fi-ta-filters{min-width:0!important}
+.fi-ta-filters-form{font-family:'Poppins',sans-serif!important}
+.fi-ta-filters-form .fi-fo-field-wrp .fi-input-wrp,.fi-ta-filters-form .fi-fo-field-wrp .fi-select{min-height:42px!important}
+.fi-ta-filters-form .fi-fo-field-wrp input,.fi-ta-filters-form .fi-fo-field-wrp select{font-size:11px!important}
+.fi-ta-filters-form .fi-fo-field-wrp-label{font-size:10px!important}
+
 /* MULTISELECT / RELATIONSHIP CHIPS */
 .fi-fo-field-wrp .fi-badge,.fi-fo-field-wrp [data-selected="true"]{font-family:'Poppins',sans-serif!important;font-size:10px!important;font-weight:600!important;border-radius:7px!important}
 .fi-fo-field-wrp .fi-input-wrp:has(input[type="search"]){min-height:44px!important}
@@ -78,6 +94,9 @@ color:var(--pm-form-ink)!important;background:transparent!important;opacity:1!im
 
 /* MOBILE */
 @media(max-width:760px){
+.fi-ta-header-toolbar{align-items:stretch!important;gap:8px!important}
+.fi-ta-search-field{flex:1 1 100%!important;max-width:none!important;min-width:0!important}
+.fi-ta-header-toolbar .fi-btn,.fi-ta-filters-trigger{flex:0 0 auto!important}
 .fi-modal-window{width:calc(100vw - 20px)!important;max-width:none!important;border-radius:12px!important}
 .fi-modal-header{padding:17px 16px!important}.fi-modal-content{padding:17px 16px!important}.fi-modal-footer{padding:13px 16px!important}
 .fi-fo-field-wrp .fi-input-wrp,.fi-fo-field-wrp .fi-select{min-height:42px!important}
