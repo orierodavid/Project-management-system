@@ -7,6 +7,7 @@ use App\Models\AttendanceRecord;
 use App\Models\Branch;
 use App\Models\User;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -43,12 +44,12 @@ class AttendanceReports extends Page implements HasForms
 
     public static function canAccess(): bool
     {
-        return (bool) auth()->user()?->can('view-reports');
+        return (bool) Filament::auth()->user()?->can('view-reports');
     }
 
     public function form(Form $form): Form
     {
-        $actor = auth()->user();
+        $actor = Filament::auth()->user();
         $branchQuery = Branch::query()->orderBy('name');
         $userQuery = User::query()->where('status', 'active')->orderBy('name');
 
@@ -129,7 +130,7 @@ class AttendanceReports extends Page implements HasForms
 
     private function query(): Builder
     {
-        $actor = auth()->user();
+        $actor = Filament::auth()->user();
         $filters = $this->data;
         $query = AttendanceRecord::query();
 
