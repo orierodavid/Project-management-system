@@ -89,7 +89,7 @@
                         @endforelse
                     </div>
                 </section>
-                <section class="pm-panel pm-focus-panel"><p class="pm-eyebrow">Quick actions</p><h2>Run the workspace.</h2><p>Manage people, attendance and delivery from one focused command centre.</p><div class="pm-quick-links"><a href="{{ url('/admin/users') }}">People <span>→</span></a><a href="{{ url('/admin/attendance') }}">Attendance <span>→</span></a><a href="{{ url('/admin/reports') }}">Reports <span>→</span></a></div></section>
+                <section class="pm-panel pm-focus-panel"><p class="pm-eyebrow">Quick actions</p><h2>Run the workspace.</h2><p>Manage people, attendance and delivery from one focused command centre.</p><div class="pm-quick-links"><a href="{{ url('/admin/users') }}">People <span>→</span></a><a href="{{ url('/admin/attendance') }}">Attendance <span>→</span></a><a href="{{ \App\Filament\Pages\AttendanceReports::getUrl() }}">Reports <span>→</span></a></div></section>
             </div>
         @endif
     </div>
