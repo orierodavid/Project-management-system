@@ -20,6 +20,12 @@ class Attendance extends Page
     {
         $user = auth()->user();
 
-        return (bool) ($user?->hasRole('Staff') && ! $user?->hasAnyRole(['Admin', 'Super Admin']) && ($user->can('clock-in') || $user->can('clock-out')));
+        if (! $user) {
+            return false;
+        }
+
+        // Attendance is available to authenticated staff and administrators.
+        // The individual clock actions remain protected by their own permissions.
+        return $user->hasAnyRole(['Staff', 'Admin', 'Super Admin']);
     }
 }
