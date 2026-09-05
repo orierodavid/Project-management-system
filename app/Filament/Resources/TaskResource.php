@@ -12,6 +12,7 @@ use App\Models\Branch;
 use App\Models\Department;
 use App\Models\Task;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
@@ -40,19 +41,19 @@ class TaskResource extends Resource
 
     public static function canViewAny(): bool
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user?->can('manage-tasks') || $user?->can('view-assigned-tasks'));
     }
 
     public static function canCreate(): bool
     {
-        return (bool) auth()->user()?->can('manage-tasks');
+        return (bool) Filament::auth()->user()?->can('manage-tasks');
     }
 
     public static function canEdit($record): bool
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         if ($user?->hasRole('Staff')) {
             return (bool) ($user->can('update-own-tasks') && (int) $record->assigned_to === (int) $user->id);
@@ -67,14 +68,14 @@ class TaskResource extends Resource
 
     public static function canDelete($record): bool
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
 
         return (bool) ($user?->can('manage-tasks') && (! $user->hasRole('Admin') || static::recordIsWithinUserBranches($record, $user)));
     }
 
     public static function getEloquentQuery(): Builder
     {
-        $user = auth()->user();
+        $user = Filament::auth()->user();
         $query = parent::getEloquentQuery()->with(['assignee', 'department', 'branch']);
 
         if ($user?->hasRole('Staff')) {
@@ -91,7 +92,7 @@ class TaskResource extends Resource
 
     public static function form(Form $form): Form
     {
-        $actor = auth()->user();
+        $actor = Filament::auth()->user();
         $staff = (bool) $actor?->hasRole('Staff');
         $isSuperAdmin = (bool) $actor?->hasRole('Super Admin');
         $branchIds = $actor?->branches()->pluck('branches.id')->all() ?? [];
