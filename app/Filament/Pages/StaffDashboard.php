@@ -8,19 +8,19 @@ use Illuminate\Support\Carbon;
 
 class StaffDashboard extends BaseDashboard
 {
-    protected static string $view = 'filament.pages.dashboard';
+    protected static string $view = 'filament.pages.staff-dashboard';
 
     protected static string $routePath = 'dashboard';
 
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
 
-    protected static ?string $navigationLabel = 'Dashboard';
+    protected static ?string $navigationLabel = 'Overview';
 
     protected static ?string $navigationGroup = 'Workspace';
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $title = 'Dashboard';
+    protected static ?string $title = 'My Overview';
 
     public static function canAccess(): bool
     {
@@ -33,23 +33,17 @@ class StaffDashboard extends BaseDashboard
     {
         $user = Filament::auth()->user();
         abort_unless(static::canAccess(), 403);
-        auth()->setUser($user);
 
         $today = Carbon::today();
         $tasks = $user->assignedTasks();
-        $todayAttendance = $user->attendanceRecords()
-            ->whereDate('clock_in_at', $today)
-            ->latest('clock_in_at')
-            ->first();
 
         return [
-            'mode' => 'staff',
             'currentUser' => $user,
             'taskCount' => (clone $tasks)->whereNotIn('status', ['done'])->count(),
             'completedCount' => (clone $tasks)->where('status', 'done')->count(),
             'dueSoonCount' => (clone $tasks)->whereNotNull('deadline')->whereBetween('deadline', [now(), now()->copy()->addDays(2)])->whereNot('status', 'done')->count(),
-            'todayAttendance' => $todayAttendance,
-            'tasks' => (clone $tasks)->with(['department', 'branch'])->orderByRaw("CASE WHEN status = 'done' THEN 1 ELSE 0 END")->orderBy('deadline')->limit(5)->get(),
+            'todayAttendance' => $user->attendanceRecords()->whereDate('clock_in_at', $today)->latest('clock_in_at')->first(),
+            'tasks' => (clone $tasks)->with(['department', 'branch'])->orderByRaw("CASE WHEN status = 'done' THEN 1 ELSE 0 END")->orderBy('deadline')->limit(6)->get(),
         ];
     }
 }
