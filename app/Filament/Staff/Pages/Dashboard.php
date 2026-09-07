@@ -23,6 +23,6 @@ class Dashboard extends BaseDashboard
     {
         $user = Filament::auth()->user();
 
-        return (bool) ($user?->isActive() && $user->hasRole('Staff') && !$user->hasAnyRole(['Super Admin', 'Admin']));
+        return (bool) ($user?->isActive() && $user->hasRole('Staff') && ! $user->hasAnyRole(['Super Admin', 'Admin']));
     }
 }
