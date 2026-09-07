@@ -9,11 +9,17 @@ use Filament\Pages\Page;
 class StaffTasks extends Page
 {
     protected static string $view = 'filament.pages.staff-tasks';
+
     protected static string $routePath = 'tasks';
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+
     protected static ?string $navigationLabel = 'My Tasks';
+
     protected static ?string $navigationGroup = 'Workspace';
+
     protected static ?int $navigationSort = 10;
+
     protected static ?string $title = 'My Tasks';
 
     public static function canAccess(): bool
