@@ -30,9 +30,13 @@ use Illuminate\Support\Str;
 class TaskResource extends Resource
 {
     protected static ?string $model = Task::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+
     protected static ?string $navigationGroup = 'Workspace';
+
     protected static ?string $navigationLabel = 'Tasks';
+
     protected static ?int $navigationSort = 20;
 
     public static function canViewAny(): bool
