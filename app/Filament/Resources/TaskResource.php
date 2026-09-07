@@ -64,7 +64,7 @@ class TaskResource extends Resource
     {
         $user = Filament::auth()->user();
 
-        return (bool) ($user?->can('manage-tasks') && (! $user->hasRole('Admin') || static::recordIsWithinUserBranches($record, $user)));
+        return (bool) ($user?->can('manage-tasks') && (!$user->hasRole('Admin') || static::recordIsWithinUserBranches($record, $user)));
     }
 
     public static function getEloquentQuery(): Builder
@@ -90,7 +90,7 @@ class TaskResource extends Resource
         $branchQuery = Branch::query()->where('is_active', true)->orderBy('name');
         $assigneeQuery = User::query()->where('status', 'active')->orderBy('name');
 
-        if (! $isSuperAdmin) {
+        if (!$isSuperAdmin) {
             $branchQuery->whereIn('id', $branchIds);
         }
 
