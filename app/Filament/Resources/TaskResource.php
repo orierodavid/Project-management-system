@@ -48,15 +48,18 @@ class TaskResource extends Resource
     public static function canEdit($record): bool
     {
         $user = Filament::auth()->user();
+
         if ($user?->hasRole('Admin')) {
             return (bool) ($user->can('manage-tasks') && static::recordIsWithinUserBranches($record, $user));
         }
+
         return (bool) $user?->can('manage-tasks');
     }
 
     public static function canDelete($record): bool
     {
         $user = Filament::auth()->user();
+
         return (bool) ($user?->can('manage-tasks') && (! $user->hasRole('Admin') || static::recordIsWithinUserBranches($record, $user)));
     }
 
@@ -64,12 +67,14 @@ class TaskResource extends Resource
     {
         $user = Filament::auth()->user();
         $query = parent::getEloquentQuery()->with(['assignee', 'department', 'branch']);
+
         if ($user?->hasRole('Admin')) {
             $branchIds = $user->branches()->pluck('branches.id');
             $query->where(function (Builder $q) use ($branchIds) {
                 $q->whereIn('branch_id', $branchIds)->orWhereNull('branch_id');
             });
         }
+
         return $query;
     }
 
@@ -80,12 +85,20 @@ class TaskResource extends Resource
         $branchIds = $actor?->branches()->pluck('branches.id')->all() ?? [];
         $branchQuery = Branch::query()->where('is_active', true)->orderBy('name');
         $assigneeQuery = User::query()->where('status', 'active')->orderBy('name');
-        if (! $isSuperAdmin) $branchQuery->whereIn('id', $branchIds);
-        if ($actor?->hasRole('Admin')) {
-            $assigneeQuery->whereHas('roles', fn (Builder $q) => $q->where('name', 'Staff'))->where(function (Builder $q) use ($branchIds) {
-                $q->whereIn('primary_branch_id', $branchIds)->orWhereHas('branches', fn (Builder $q) => $q->whereIn('branches.id', $branchIds));
-            });
+
+        if (! $isSuperAdmin) {
+            $branchQuery->whereIn('id', $branchIds);
         }
+
+        if ($actor?->hasRole('Admin')) {
+            $assigneeQuery
+                ->whereHas('roles', fn (Builder $q) => $q->where('name', 'Staff'))
+                ->where(function (Builder $q) use ($branchIds) {
+                    $q->whereIn('primary_branch_id', $branchIds)
+                        ->orWhereHas('branches', fn (Builder $q) => $q->whereIn('branches.id', $branchIds));
+                });
+        }
+
         return $form->schema([
             TextInput::make('title')->required()->maxLength(255),
             RichEditor::make('description')->columnSpanFull(),
@@ -101,6 +114,7 @@ class TaskResource extends Resource
     protected static function recordIsWithinUserBranches(Task $record, User $user): bool
     {
         $branchIds = $user->branches()->pluck('branches.id');
+
         return $record->branch_id === null || $branchIds->contains($record->branch_id);
     }
 
