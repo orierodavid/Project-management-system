@@ -37,22 +37,17 @@ class TaskResource extends Resource
 
     public static function canViewAny(): bool
     {
-        $user = Filament::auth()->user();
-        return (bool) ($user?->can('manage-tasks') || $user?->can('view-assigned-tasks'));
+        return (bool) Filament::auth()->user()?->can('manage-tasks');
     }
 
     public static function canCreate(): bool
     {
-        $user = Filament::auth()->user();
-        return (bool) ($user && ($user->can('manage-tasks') || $user->hasRole('Staff')));
+        return (bool) Filament::auth()->user()?->can('manage-tasks');
     }
 
     public static function canEdit($record): bool
     {
         $user = Filament::auth()->user();
-        if ($user?->hasRole('Staff')) {
-            return (bool) ($user->can('update-own-tasks') && (int) $record->assigned_to === (int) $user->id);
-        }
         if ($user?->hasRole('Admin')) {
             return (bool) ($user->can('manage-tasks') && static::recordIsWithinUserBranches($record, $user));
         }
@@ -69,9 +64,7 @@ class TaskResource extends Resource
     {
         $user = Filament::auth()->user();
         $query = parent::getEloquentQuery()->with(['assignee', 'department', 'branch']);
-        if ($user?->hasRole('Staff')) {
-            $query->where('assigned_to', $user->id);
-        } elseif ($user?->hasRole('Admin')) {
+        if ($user?->hasRole('Admin')) {
             $branchIds = $user->branches()->pluck('branches.id');
             $query->where(function (Builder $q) use ($branchIds) {
                 $q->whereIn('branch_id', $branchIds)->orWhereNull('branch_id');
@@ -83,30 +76,25 @@ class TaskResource extends Resource
     public static function form(Form $form): Form
     {
         $actor = Filament::auth()->user();
-        $staff = (bool) $actor?->hasRole('Staff');
         $isSuperAdmin = (bool) $actor?->hasRole('Super Admin');
         $branchIds = $actor?->branches()->pluck('branches.id')->all() ?? [];
-
         $branchQuery = Branch::query()->where('is_active', true)->orderBy('name');
         $assigneeQuery = User::query()->where('status', 'active')->orderBy('name');
-        if (! $isSuperAdmin) {
-            $branchQuery->whereIn('id', $branchIds);
-        }
+        if (! $isSuperAdmin) $branchQuery->whereIn('id', $branchIds);
         if ($actor?->hasRole('Admin')) {
             $assigneeQuery->whereHas('roles', fn (Builder $q) => $q->where('name', 'Staff'))->where(function (Builder $q) use ($branchIds) {
                 $q->whereIn('primary_branch_id', $branchIds)->orWhereHas('branches', fn (Builder $q) => $q->whereIn('branches.id', $branchIds));
             });
         }
-
         return $form->schema([
             TextInput::make('title')->required()->maxLength(255),
             RichEditor::make('description')->columnSpanFull(),
-            Select::make('department_id')->label('Department')->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload()->disabled($staff),
-            Select::make('branch_id')->options($branchQuery->pluck('name', 'id'))->searchable()->preload()->disabled($staff),
-            Select::make('assigned_to')->label('Assignee')->options($assigneeQuery->pluck('name', 'id'))->searchable()->preload()->disabled($staff),
-            Select::make('priority')->options(['low' => 'Low', 'medium' => 'Medium', 'high' => 'High'])->required()->default('medium')->disabled($staff),
+            Select::make('department_id')->label('Department')->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload(),
+            Select::make('branch_id')->options($branchQuery->pluck('name', 'id'))->searchable()->preload(),
+            Select::make('assigned_to')->label('Assignee')->options($assigneeQuery->pluck('name', 'id'))->searchable()->preload(),
+            Select::make('priority')->options(['low' => 'Low', 'medium' => 'Medium', 'high' => 'High'])->required()->default('medium'),
             Select::make('status')->options(['todo' => 'To do', 'in_progress' => 'In progress', 'review' => 'Review', 'done' => 'Done'])->required()->default('todo'),
-            DateTimePicker::make('deadline')->seconds(false)->native(false)->disabled($staff),
+            DateTimePicker::make('deadline')->seconds(false)->native(false),
         ]);
     }
 
