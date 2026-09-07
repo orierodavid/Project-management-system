@@ -20,10 +20,19 @@ class User extends Authenticatable implements FilamentUser
     use HasApiTokens, HasFactory, HasRoles, LogsActivity, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'phone', 'department_id', 'primary_branch_id', 'status',
+        'name',
+        'email',
+        'password',
+        'phone',
+        'department_id',
+        'primary_branch_id',
+        'status',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
     protected function casts(): array
     {
@@ -37,7 +46,14 @@ class User extends Authenticatable implements FilamentUser
     {
         return LogOptions::defaults()
             ->useLogName('users')
-            ->logOnly(['name', 'email', 'phone', 'department_id', 'primary_branch_id', 'status'])
+            ->logOnly([
+                'name',
+                'email',
+                'phone',
+                'department_id',
+                'primary_branch_id',
+                'status',
+            ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
@@ -48,13 +64,9 @@ class User extends Authenticatable implements FilamentUser
             return false;
         }
 
-        $isSuperAdmin = $this->hasRole('Super Admin');
-        $isAdmin = $this->hasRole('Admin');
-        $isStaff = $this->hasRole('Staff');
-
         return match ($panel->getId()) {
-            'admin' => ($isSuperAdmin || $isAdmin) && ! $isStaff,
-            'staff' => $isStaff && ! $isSuperAdmin && ! $isAdmin,
+            'admin' => $this->hasAnyRole(['Super Admin', 'Admin']) && ! $this->hasRole('Staff'),
+            'staff' => $this->hasRole('Staff') && ! $this->hasAnyRole(['Super Admin', 'Admin']),
             default => false,
         };
     }
