@@ -17,12 +17,8 @@ class CreateTask extends CreateRecord
         $actor = auth()->user();
         $data = $this->form->getRawState();
 
-        if (! $actor || (! $actor->can('manage-tasks') && ! $actor->hasRole('Staff'))) {
+        if (! $actor || ! $actor->can('manage-tasks')) {
             throw new AuthorizationException('You are not authorized to create tasks.');
-        }
-
-        if ($actor->hasRole('Staff')) {
-            return;
         }
 
         if ($actor->hasRole('Admin')) {
@@ -47,15 +43,7 @@ class CreateTask extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $actor = auth()->user();
-        $data['assigned_by'] = $actor?->id;
-
-        if ($actor?->hasRole('Staff')) {
-            $data['assigned_to'] = $actor->id;
-            $data['department_id'] = $actor->department_id;
-            $data['branch_id'] = $actor->primary_branch_id;
-        }
-
+        $data['assigned_by'] = auth()->id();
         return $data;
     }
 
