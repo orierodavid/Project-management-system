@@ -30,9 +30,15 @@ class CreateTask extends CreateRecord
             }
 
             if (! empty($data['assigned_to'])) {
-                $assignee = User::query()->whereKey((int) $data['assigned_to'])->where('status', 'active')->whereHas('roles', fn ($query) => $query->where('name', 'Staff'))->where(function ($query) use ($branchIds): void {
-                    $query->whereIn('primary_branch_id', $branchIds)->orWhereHas('branches', fn ($query) => $query->whereIn('branches.id', $branchIds));
-                })->exists();
+                $assignee = User::query()
+                    ->whereKey((int) $data['assigned_to'])
+                    ->where('status', 'active')
+                    ->whereHas('roles', fn ($query) => $query->where('name', 'Staff'))
+                    ->where(function ($query) use ($branchIds): void {
+                        $query->whereIn('primary_branch_id', $branchIds)
+                            ->orWhereHas('branches', fn ($query) => $query->whereIn('branches.id', $branchIds));
+                    })
+                    ->exists();
 
                 if (! $assignee) {
                     throw new AuthorizationException('You can only assign tasks to active staff within your assigned branches.');
@@ -44,6 +50,7 @@ class CreateTask extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['assigned_by'] = auth()->id();
+
         return $data;
     }
 
