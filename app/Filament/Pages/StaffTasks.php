@@ -5,7 +5,6 @@ namespace App\Filament\Pages;
 use App\Models\Task;
 use Filament\Facades\Filament;
 use Filament\Pages\Page;
-use Illuminate\Database\Eloquent\Builder;
 
 class StaffTasks extends Page
 {
@@ -20,6 +19,7 @@ class StaffTasks extends Page
     public static function canAccess(): bool
     {
         $user = Filament::auth()->user();
+
         return (bool) $user?->hasRole('Staff');
     }
 
@@ -31,8 +31,8 @@ class StaffTasks extends Page
         $tasks = Task::query()
             ->with(['department', 'branch'])
             ->where('assigned_to', $user->id)
-            ->orderByRaw("CASE WHEN status = 'done' THEN 1 ELSE 0 END")
-            ->orderByRaw("CASE WHEN deadline IS NULL THEN 1 ELSE 0 END")
+            ->orderByRaw('CASE WHEN status = \'done\' THEN 1 ELSE 0 END')
+            ->orderByRaw('CASE WHEN deadline IS NULL THEN 1 ELSE 0 END')
             ->orderBy('deadline')
             ->get();
 
