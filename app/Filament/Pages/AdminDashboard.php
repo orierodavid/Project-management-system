@@ -13,7 +13,9 @@ class AdminDashboard extends BaseDashboard
 {
     protected static string $view = 'filament.pages.dashboard';
 
-    protected static string $routePath = 'dashboard';
+    // The admin dashboard is the panel home page: /admin.
+    // Keeping this empty prevents the admin panel from landing on a non-dashboard route.
+    protected static string $routePath = '';
 
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
 

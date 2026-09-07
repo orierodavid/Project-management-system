@@ -30,46 +30,38 @@ use Illuminate\Support\Str;
 class TaskResource extends Resource
 {
     protected static ?string $model = Task::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
-
     protected static ?string $navigationGroup = 'Workspace';
-
     protected static ?string $navigationLabel = 'Tasks';
-
     protected static ?int $navigationSort = 20;
 
     public static function canViewAny(): bool
     {
         $user = Filament::auth()->user();
-
         return (bool) ($user?->can('manage-tasks') || $user?->can('view-assigned-tasks'));
     }
 
     public static function canCreate(): bool
     {
-        return (bool) Filament::auth()->user()?->can('manage-tasks');
+        $user = Filament::auth()->user();
+        return (bool) ($user && ($user->can('manage-tasks') || $user->hasRole('Staff')));
     }
 
     public static function canEdit($record): bool
     {
         $user = Filament::auth()->user();
-
         if ($user?->hasRole('Staff')) {
             return (bool) ($user->can('update-own-tasks') && (int) $record->assigned_to === (int) $user->id);
         }
-
         if ($user?->hasRole('Admin')) {
             return (bool) ($user->can('manage-tasks') && static::recordIsWithinUserBranches($record, $user));
         }
-
         return (bool) $user?->can('manage-tasks');
     }
 
     public static function canDelete($record): bool
     {
         $user = Filament::auth()->user();
-
         return (bool) ($user?->can('manage-tasks') && (! $user->hasRole('Admin') || static::recordIsWithinUserBranches($record, $user)));
     }
 
@@ -77,7 +69,6 @@ class TaskResource extends Resource
     {
         $user = Filament::auth()->user();
         $query = parent::getEloquentQuery()->with(['assignee', 'department', 'branch']);
-
         if ($user?->hasRole('Staff')) {
             $query->where('assigned_to', $user->id);
         } elseif ($user?->hasRole('Admin')) {
@@ -86,7 +77,6 @@ class TaskResource extends Resource
                 $q->whereIn('branch_id', $branchIds)->orWhereNull('branch_id');
             });
         }
-
         return $query;
     }
 
@@ -99,44 +89,23 @@ class TaskResource extends Resource
 
         $branchQuery = Branch::query()->where('is_active', true)->orderBy('name');
         $assigneeQuery = User::query()->where('status', 'active')->orderBy('name');
-
         if (! $isSuperAdmin) {
             $branchQuery->whereIn('id', $branchIds);
         }
-
         if ($actor?->hasRole('Admin')) {
-            $assigneeQuery
-                ->whereHas('roles', fn (Builder $q) => $q->where('name', 'Staff'))
-                ->where(function (Builder $q) use ($branchIds) {
-                    $q->whereIn('primary_branch_id', $branchIds)
-                        ->orWhereHas('branches', fn (Builder $q) => $q->whereIn('branches.id', $branchIds));
-                });
+            $assigneeQuery->whereHas('roles', fn (Builder $q) => $q->where('name', 'Staff'))->where(function (Builder $q) use ($branchIds) {
+                $q->whereIn('primary_branch_id', $branchIds)->orWhereHas('branches', fn (Builder $q) => $q->whereIn('branches.id', $branchIds));
+            });
         }
 
         return $form->schema([
             TextInput::make('title')->required()->maxLength(255),
             RichEditor::make('description')->columnSpanFull(),
-            Select::make('department_id')
-                ->label('Department')
-                ->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))
-                ->searchable()->preload()
-                ->disabled($staff),
-            Select::make('branch_id')
-                ->options($branchQuery->pluck('name', 'id'))
-                ->searchable()->preload()
-                ->disabled($staff),
-            Select::make('assigned_to')
-                ->label('Assignee')
-                ->options($assigneeQuery->pluck('name', 'id'))
-                ->searchable()->preload()
-                ->disabled($staff),
-            Select::make('priority')
-                ->options(['low' => 'Low', 'medium' => 'Medium', 'high' => 'High'])
-                ->required()->default('medium')
-                ->disabled($staff),
-            Select::make('status')
-                ->options(['todo' => 'To do', 'in_progress' => 'In progress', 'review' => 'Review', 'done' => 'Done'])
-                ->required()->default('todo'),
+            Select::make('department_id')->label('Department')->options(Department::query()->where('is_active', true)->orderBy('name')->pluck('name', 'id'))->searchable()->preload()->disabled($staff),
+            Select::make('branch_id')->options($branchQuery->pluck('name', 'id'))->searchable()->preload()->disabled($staff),
+            Select::make('assigned_to')->label('Assignee')->options($assigneeQuery->pluck('name', 'id'))->searchable()->preload()->disabled($staff),
+            Select::make('priority')->options(['low' => 'Low', 'medium' => 'Medium', 'high' => 'High'])->required()->default('medium')->disabled($staff),
+            Select::make('status')->options(['todo' => 'To do', 'in_progress' => 'In progress', 'review' => 'Review', 'done' => 'Done'])->required()->default('todo'),
             DateTimePicker::make('deadline')->seconds(false)->native(false)->disabled($staff),
         ]);
     }
@@ -144,87 +113,28 @@ class TaskResource extends Resource
     protected static function recordIsWithinUserBranches(Task $record, User $user): bool
     {
         $branchIds = $user->branches()->pluck('branches.id');
-
         return $record->branch_id === null || $branchIds->contains($record->branch_id);
     }
 
     public static function table(Table $table): Table
     {
-        return $table
-            ->columns([
-                TextColumn::make('title')
-                    ->label('Task')
-                    ->searchable()->sortable()->limit(45)
-                    ->description(fn (Task $record): string => Str::limit(strip_tags((string) $record->description), 64))
-                    ->weight('semibold'),
-                TextColumn::make('assignee.name')
-                    ->label('Assignee')
-                    ->searchable()->sortable()
-                    ->description(fn (Task $record): ?string => $record->assignee?->email)
-                    ->placeholder('Unassigned'),
-                TextColumn::make('department.name')
-                    ->label('Department')
-                    ->sortable()
-                    ->description(fn (Task $record): ?string => $record->branch?->name)
-                    ->placeholder('—'),
-                TextColumn::make('priority')
-                    ->badge()
-                    ->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))
-                    ->color(fn (?string $state): string => match ($state) {
-                        'high' => 'danger',
-                        'medium' => 'warning',
-                        default => 'gray',
-                    }),
-                TextColumn::make('status')
-                    ->badge()
-                    ->formatStateUsing(fn (?string $state): string => match ($state) {
-                        'in_progress' => 'In progress',
-                        'todo' => 'To do',
-                        'review' => 'Review',
-                        'done' => 'Done',
-                        default => ucfirst($state ?? ''),
-                    })
-                    ->color(fn (?string $state): string => match ($state) {
-                        'done' => 'success',
-                        'review' => 'warning',
-                        'in_progress' => 'info',
-                        default => 'gray',
-                    }),
-                TextColumn::make('deadline')
-                    ->label('Due')
-                    ->dateTime('M j, Y · g:i A')
-                    ->sortable()
-                    ->color(fn ($record): string => $record->is_overdue ? 'danger' : 'gray')
-                    ->description(fn ($record): string => $record->is_overdue ? 'Overdue' : ($record->deadline?->diffForHumans() ?? 'No deadline')),
-            ])
-            ->filters([
-                SelectFilter::make('status')
-                    ->options([
-                        'todo' => 'To do',
-                        'in_progress' => 'In progress',
-                        'review' => 'Review',
-                        'done' => 'Done',
-                    ]),
-                SelectFilter::make('priority')
-                    ->options([
-                        'low' => 'Low',
-                        'medium' => 'Medium',
-                        'high' => 'High',
-                    ]),
-                TernaryFilter::make('is_overdue')->label('Overdue'),
-            ])
-            ->actions([
-                EditAction::make()->iconButton(),
-            ])
-            ->defaultSort('deadline');
+        return $table->columns([
+            TextColumn::make('title')->label('Task')->searchable()->sortable()->limit(45)->description(fn (Task $record): string => Str::limit(strip_tags((string) $record->description), 64))->weight('semibold'),
+            TextColumn::make('assignee.name')->label('Assignee')->searchable()->sortable()->description(fn (Task $record): ?string => $record->assignee?->email)->placeholder('Unassigned'),
+            TextColumn::make('department.name')->label('Department')->sortable()->description(fn (Task $record): ?string => $record->branch?->name)->placeholder('—'),
+            TextColumn::make('priority')->badge()->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))->color(fn (?string $state): string => match ($state) {'high' => 'danger', 'medium' => 'warning', default => 'gray'}),
+            TextColumn::make('status')->badge()->formatStateUsing(fn (?string $state): string => match ($state) {'in_progress' => 'In progress', 'todo' => 'To do', 'review' => 'Review', 'done' => 'Done', default => ucfirst($state ?? '')})->color(fn (?string $state): string => match ($state) {'done' => 'success', 'review' => 'warning', 'in_progress' => 'info', default => 'gray'}),
+            TextColumn::make('deadline')->label('Due')->dateTime('M j, Y · g:i A')->sortable()->color(fn ($record): string => $record->is_overdue ? 'danger' : 'gray')->description(fn ($record): string => $record->is_overdue ? 'Overdue' : ($record->deadline?->diffForHumans() ?? 'No deadline')),
+        ])->filters([
+            SelectFilter::make('status')->options(['todo' => 'To do', 'in_progress' => 'In progress', 'review' => 'Review', 'done' => 'Done']),
+            SelectFilter::make('priority')->options(['low' => 'Low', 'medium' => 'Medium', 'high' => 'High']),
+            TernaryFilter::make('is_overdue')->label('Overdue'),
+        ])->actions([EditAction::make()->iconButton()])->defaultSort('deadline');
     }
 
     public static function getRelations(): array
     {
-        return [
-            CommentsRelationManager::class,
-            AttachmentsRelationManager::class,
-        ];
+        return [CommentsRelationManager::class, AttachmentsRelationManager::class];
     }
 
     public static function getPages(): array
