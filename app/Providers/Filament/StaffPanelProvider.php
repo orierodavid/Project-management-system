@@ -5,7 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Auth\StaffLogin;
 use App\Filament\Pages\Attendance;
 use App\Filament\Pages\StaffDashboard;
-use App\Filament\Resources\TaskResource;
+use App\Filament\Pages\StaffTasks;
 use App\Models\Setting;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -32,12 +32,10 @@ class StaffPanelProvider extends PanelProvider
             ->brandName(fn (): string => Setting::current()->company_name ?: 'Project Management System')
             ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
             ->colors(['primary' => Color::hex(Setting::current()->primary_color ?: '#2563EB')])
-            ->resources([
-                TaskResource::class,
-            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->pages([
                 StaffDashboard::class,
+                StaffTasks::class,
                 Attendance::class,
             ])
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.theme')->render())
