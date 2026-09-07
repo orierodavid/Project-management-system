@@ -64,7 +64,7 @@ class TaskResource extends Resource
     {
         $user = Filament::auth()->user();
 
-        return (bool) ($user?->can('manage-tasks') && (!$user->hasRole('Admin') || static::recordIsWithinUserBranches($record, $user)));
+        return (bool) ($user?->can('manage-tasks') && (! $user->hasRole('Admin') || static::recordIsWithinUserBranches($record, $user)));
     }
 
     public static function getEloquentQuery(): Builder
@@ -90,7 +90,7 @@ class TaskResource extends Resource
         $branchQuery = Branch::query()->where('is_active', true)->orderBy('name');
         $assigneeQuery = User::query()->where('status', 'active')->orderBy('name');
 
-        if (!$isSuperAdmin) {
+        if (! $isSuperAdmin) {
             $branchQuery->whereIn('id', $branchIds);
         }
 
@@ -128,8 +128,23 @@ class TaskResource extends Resource
             TextColumn::make('title')->label('Task')->searchable()->sortable()->limit(45)->description(fn (Task $record): string => Str::limit(strip_tags((string) $record->description), 64))->weight('semibold'),
             TextColumn::make('assignee.name')->label('Assignee')->searchable()->sortable()->description(fn (Task $record): ?string => $record->assignee?->email)->placeholder('Unassigned'),
             TextColumn::make('department.name')->label('Department')->sortable()->description(fn (Task $record): ?string => $record->branch?->name)->placeholder('—'),
-            TextColumn::make('priority')->badge()->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))->color(fn (?string $state): string => match ($state) {'high' => 'danger', 'medium' => 'warning', default => 'gray'}),
-            TextColumn::make('status')->badge()->formatStateUsing(fn (?string $state): string => match ($state) {'in_progress' => 'In progress', 'todo' => 'To do', 'review' => 'Review', 'done' => 'Done', default => ucfirst($state ?? '')})->color(fn (?string $state): string => match ($state) {'done' => 'success', 'review' => 'warning', 'in_progress' => 'info', default => 'gray'}),
+            TextColumn::make('priority')->badge()->formatStateUsing(fn (?string $state): string => ucfirst($state ?? ''))->color(fn (?string $state): string => match ($state) {
+                'high' => 'danger',
+                'medium' => 'warning',
+                default => 'gray',
+            }),
+            TextColumn::make('status')->badge()->formatStateUsing(fn (?string $state): string => match ($state) {
+                'in_progress' => 'In progress',
+                'todo' => 'To do',
+                'review' => 'Review',
+                'done' => 'Done',
+                default => ucfirst($state ?? ''),
+            })->color(fn (?string $state): string => match ($state) {
+                'done' => 'success',
+                'review' => 'warning',
+                'in_progress' => 'info',
+                default => 'gray',
+            }),
             TextColumn::make('deadline')->label('Due')->dateTime('M j, Y · g:i A')->sortable()->color(fn ($record): string => $record->is_overdue ? 'danger' : 'gray')->description(fn ($record): string => $record->is_overdue ? 'Overdue' : ($record->deadline?->diffForHumans() ?? 'No deadline')),
         ])->filters([
             SelectFilter::make('status')->options(['todo' => 'To do', 'in_progress' => 'In progress', 'review' => 'Review', 'done' => 'Done']),
