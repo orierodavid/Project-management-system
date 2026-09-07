@@ -2,8 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Admin\Pages\Dashboard;
+use App\Filament\Admin\Widgets\AdminOverview;
 use App\Filament\Auth\Login;
-use App\Filament\Pages\AdminDashboard;
 use App\Filament\Pages\Attendance;
 use App\Filament\Pages\AttendanceReports;
 use App\Filament\Pages\CompanySettings;
@@ -33,9 +34,15 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->default()->id('admin')->path('admin')->login(Login::class)->authGuard('admin')
+            ->default()
+            ->id('admin')
+            ->path('admin')
+            ->login(Login::class)
+            ->authGuard('admin')
             ->brandName(fn (): string => Setting::current()->company_name ?: 'Project Management System')
-            ->brandLogo(fn (): ?string => Setting::current()->company_logo ? Storage::disk('public')->url(Setting::current()->company_logo) : null)
+            ->brandLogo(fn (): ?string => Setting::current()->company_logo
+                ? Storage::disk('public')->url(Setting::current()->company_logo)
+                : null)
             ->colors(['primary' => Color::hex(Setting::current()->primary_color ?: '#2563EB')])
             ->resources([
                 BranchResource::class,
@@ -43,20 +50,30 @@ class AdminPanelProvider extends PanelProvider
                 TaskResource::class,
                 UserResource::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->pages([
-                AdminDashboard::class,
+                Dashboard::class,
                 Attendance::class,
                 AttendanceReports::class,
                 CompanySettings::class,
             ])
+            ->widgets([
+                AdminOverview::class,
+            ])
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): string => view('filament.theme')->render())
             ->renderHook(PanelsRenderHook::BODY_START, fn (): string => view('filament.product-shell')->render())
             ->middleware([
-                EncryptCookies::class, AddQueuedCookiesToResponse::class, StartSession::class,
-                AuthenticateSession::class, ShareErrorsFromSession::class, VerifyCsrfToken::class,
-                SubstituteBindings::class, DisableBladeIconComponents::class, DispatchServingFilamentEvent::class,
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                VerifyCsrfToken::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
             ])
-            ->authMiddleware([Authenticate::class]);
+            ->authMiddleware([
+                Authenticate::class,
+            ]);
     }
 }
