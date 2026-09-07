@@ -25,23 +25,4 @@ class Dashboard extends BaseDashboard
 
         return (bool) ($user?->isActive() && $user->hasRole('Staff') && !$user->hasAnyRole(['Super Admin', 'Admin']));
     }
-
-    public function getViewData(): array
-    {
-        $user = Filament::auth()->user();
-        abort_unless(static::canAccess(), 403);
-
-        $tasks = $user->assignedTasks();
-
-        return [
-            'currentUser' => $user,
-            'openTaskCount' => (clone $tasks)->whereNot('status', 'done')->count(),
-            'completedCount' => (clone $tasks)->where('status', 'done')->count(),
-            'dueSoonCount' => (clone $tasks)
-                ->whereNotNull('deadline')
-                ->whereBetween('deadline', [now(), now()->copy()->addDays(2)])
-                ->whereNot('status', 'done')
-                ->count(),
-        ];
-    }
 }
