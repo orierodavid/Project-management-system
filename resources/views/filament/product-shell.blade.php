@@ -30,13 +30,13 @@
                 <a class="pm-nav-item {{ $current === 'admin' ? 'is-active' : '' }}" href="{{ url('/admin') }}"><span class="pm-nav-icon">⌂</span><span>Dashboard</span></a>
                 <a class="pm-nav-item {{ $active('admin/tasks') ? 'is-active' : '' }}" href="{{ url('/admin/tasks') }}"><span class="pm-nav-icon">✓</span><span>Tasks</span></a>
                 <p class="pm-nav-label">Organization</p>
-                @if($user->can('manage-users'))<a class="pm-nav-item {{ $active('admin/users') ? 'is-active' : '' }}" href="{{ url('/admin/users') }}"><span class="pm-nav-icon">◎</span><span>People</span></a>@endif
-                @if($user->can('manage-departments'))<a class="pm-nav-item {{ $active('admin/departments') ? 'is-active' : '' }}" href="{{ url('/admin/departments') }}"><span class="pm-nav-icon">◫</span><span>Departments</span></a>@endif
-                @if($user->can('manage-branches'))<a class="pm-nav-item {{ $active('admin/branches') ? 'is-active' : '' }}" href="{{ url('/admin/branches') }}"><span class="pm-nav-icon">⌖</span><span>Branches</span></a>@endif
+                @if($user->hasPermissionTo('manage-users'))<a class="pm-nav-item {{ $active('admin/users') ? 'is-active' : '' }}" href="{{ url('/admin/users') }}"><span class="pm-nav-icon">◎</span><span>People</span></a>@endif
+                @if($user->hasPermissionTo('manage-departments'))<a class="pm-nav-item {{ $active('admin/departments') ? 'is-active' : '' }}" href="{{ url('/admin/departments') }}"><span class="pm-nav-icon">◫</span><span>Departments</span></a>@endif
+                @if($user->hasPermissionTo('manage-branches'))<a class="pm-nav-item {{ $active('admin/branches') ? 'is-active' : '' }}" href="{{ url('/admin/branches') }}"><span class="pm-nav-icon">⌖</span><span>Branches</span></a>@endif
                 <p class="pm-nav-label">Operations</p>
                 <a class="pm-nav-item {{ $active('admin/attendance') ? 'is-active' : '' }}" href="{{ url('/admin/attendance') }}"><span class="pm-nav-icon">◷</span><span>Attendance</span></a>
-                @if($user->can('view-reports'))<a class="pm-nav-item {{ $active('admin/attendance-reports') ? 'is-active' : '' }}" href="{{ \App\Filament\Pages\AttendanceReports::getUrl() }}"><span class="pm-nav-icon">▥</span><span>Reports</span></a>@endif
-                @if($user->can('manage-settings'))<p class="pm-nav-label">System</p><a class="pm-nav-item {{ $active('admin/company-settings') ? 'is-active' : '' }}" href="{{ \App\Filament\Pages\CompanySettings::getUrl() }}"><span class="pm-nav-icon">⚙</span><span>Settings</span></a>@endif
+                @if($user->hasPermissionTo('view-reports'))<a class="pm-nav-item {{ $active('admin/attendance-reports') ? 'is-active' : '' }}" href="{{ \App\Filament\Pages\AttendanceReports::getUrl() }}"><span class="pm-nav-icon">▥</span><span>Reports</span></a>@endif
+                @if($user->hasPermissionTo('manage-settings'))<p class="pm-nav-label">System</p><a class="pm-nav-item {{ $active('admin/company-settings') ? 'is-active' : '' }}" href="{{ \App\Filament\Pages\CompanySettings::getUrl() }}"><span class="pm-nav-icon">⚙</span><span>Settings</span></a>@endif
             @endif
         </nav>
         <div class="pm-shell-account">
@@ -47,7 +47,7 @@
     <header class="pm-shell-topbar">
         <div class="pm-topbar-context"><button class="pm-mobile-menu" type="button" @click="open = true" aria-label="Open navigation">☰</button><div><strong>{{ $isStaff ? 'My workspace' : 'Administration' }}</strong><span>{{ $isStaff ? 'Your work and attendance' : 'Manage your workspace' }}</span></div></div>
         <div class="pm-topbar-actions">
-            @if (! $isStaff && $user->can('manage-tasks'))<a class="pm-topbar-create" href="{{ \App\Filament\Resources\TaskResource::getUrl('create') }}">+ <span>New task</span></a>@endif
+            @if (! $isStaff && $user->hasPermissionTo('manage-tasks'))<a class="pm-topbar-create" href="{{ \App\Filament\Resources\TaskResource::getUrl('create') }}">+ <span>New task</span></a>@endif
             <div class="pm-topbar-divider"></div><span class="pm-topbar-name">{{ $user->name }}</span><span class="pm-user-avatar pm-user-avatar-small">{{ $initials }}</span>
         </div>
     </header>
