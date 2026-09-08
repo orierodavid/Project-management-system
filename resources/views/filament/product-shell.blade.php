@@ -30,13 +30,13 @@
                 <a class="pm-nav-item {{ $current === 'admin' ? 'is-active' : '' }}" href="{{ url('/admin') }}"><span class="pm-nav-icon">⌂</span><span>Dashboard</span></a>
                 <a class="pm-nav-item {{ $active('admin/tasks') ? 'is-active' : '' }}" href="{{ url('/admin/tasks') }}"><span class="pm-nav-icon">✓</span><span>Tasks</span></a>
                 <p class="pm-nav-label">Organization</p>
-                @can('manage-users')<a class="pm-nav-item {{ $active('admin/users') ? 'is-active' : '' }}" href="{{ url('/admin/users') }}"><span class="pm-nav-icon">◎</span><span>People</span></a>@endcan
-                @can('manage-departments')<a class="pm-nav-item {{ $active('admin/departments') ? 'is-active' : '' }}" href="{{ url('/admin/departments') }}"><span class="pm-nav-icon">◫</span><span>Departments</span></a>@endcan
-                @can('manage-branches')<a class="pm-nav-item {{ $active('admin/branches') ? 'is-active' : '' }}" href="{{ url('/admin/branches') }}"><span class="pm-nav-icon">⌖</span><span>Branches</span></a>@endcan
+                @if($user->can('manage-users'))<a class="pm-nav-item {{ $active('admin/users') ? 'is-active' : '' }}" href="{{ url('/admin/users') }}"><span class="pm-nav-icon">◎</span><span>People</span></a>@endif
+                @if($user->can('manage-departments'))<a class="pm-nav-item {{ $active('admin/departments') ? 'is-active' : '' }}" href="{{ url('/admin/departments') }}"><span class="pm-nav-icon">◫</span><span>Departments</span></a>@endif
+                @if($user->can('manage-branches'))<a class="pm-nav-item {{ $active('admin/branches') ? 'is-active' : '' }}" href="{{ url('/admin/branches') }}"><span class="pm-nav-icon">⌖</span><span>Branches</span></a>@endif
                 <p class="pm-nav-label">Operations</p>
                 <a class="pm-nav-item {{ $active('admin/attendance') ? 'is-active' : '' }}" href="{{ url('/admin/attendance') }}"><span class="pm-nav-icon">◷</span><span>Attendance</span></a>
-                @can('view-reports')<a class="pm-nav-item {{ $active('admin/attendance-reports') ? 'is-active' : '' }}" href="{{ \App\Filament\Pages\AttendanceReports::getUrl() }}"><span class="pm-nav-icon">▥</span><span>Reports</span></a>@endcan
-                @can('manage-settings')<p class="pm-nav-label">System</p><a class="pm-nav-item {{ $active('admin/company-settings') ? 'is-active' : '' }}" href="{{ \App\Filament\Pages\CompanySettings::getUrl() }}"><span class="pm-nav-icon">⚙</span><span>Settings</span></a>@endcan
+                @if($user->can('view-reports'))<a class="pm-nav-item {{ $active('admin/attendance-reports') ? 'is-active' : '' }}" href="{{ \App\Filament\Pages\AttendanceReports::getUrl() }}"><span class="pm-nav-icon">▥</span><span>Reports</span></a>@endif
+                @if($user->can('manage-settings'))<p class="pm-nav-label">System</p><a class="pm-nav-item {{ $active('admin/company-settings') ? 'is-active' : '' }}" href="{{ \App\Filament\Pages\CompanySettings::getUrl() }}"><span class="pm-nav-icon">⚙</span><span>Settings</span></a>@endif
             @endif
         </nav>
         <div class="pm-shell-account">

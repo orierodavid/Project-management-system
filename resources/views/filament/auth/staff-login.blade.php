@@ -47,7 +47,7 @@
         .pm-staff-login-brand span{margin-top:4px;color:#667085;font-size:9px;font-weight:800;letter-spacing:.14em}
         .pm-staff-login-card{background:#fff;border:1px solid #e4e7ec;border-radius:18px;padding:38px;box-shadow:0 20px 55px rgba(16,24,40,.08)}
         .pm-staff-login-heading{margin-bottom:28px}
-        .pm-staff-login-eyebrow{display:block;margin-bottom:8px;color:#2563eb;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+        .pm-staff-login-eyebrow{display:block;margin-bottom:8px;color:#e91e63;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
         .pm-staff-login-heading h1{margin:0;color:#101828;font-size:30px;line-height:1.15;font-weight:780;letter-spacing:-.04em}
         .pm-staff-login-heading p{margin:9px 0 0;color:#667085;font-size:13px;line-height:1.55}
         .pm-staff-login-form{display:flex;flex-direction:column;gap:15px}
@@ -55,8 +55,8 @@
         .pm-staff-login-form .fi-input-wrp{background:#fff!important;border:1px solid #d0d5dd!important;border-radius:9px!important;min-height:46px}
         .pm-staff-login-form .fi-input{color:#101828!important;-webkit-text-fill-color:#101828!important;background:transparent!important}
         .pm-staff-login-form .fi-input::placeholder{color:#98a2b3!important}
-        .pm-staff-login-form .fi-input-wrp:focus-within{border-color:#2563eb!important;box-shadow:0 0 0 3px rgba(37,99,235,.11)!important}
-        .pm-staff-login-forgot{align-self:flex-end;color:#2563eb;font-size:11px;font-weight:650;text-decoration:none}
+        .pm-staff-login-form .fi-input-wrp:focus-within{border-color:#e91e63!important;box-shadow:0 0 0 3px rgba(37,99,235,.11)!important}
+        .pm-staff-login-forgot{align-self:flex-end;color:#e91e63;font-size:11px;font-weight:650;text-decoration:none}
         .pm-staff-login-forgot:hover{text-decoration:underline}
         .pm-staff-login-submit{width:100%;justify-content:center;min-height:46px;margin-top:3px}
         .pm-staff-login-submit span{margin-left:auto;font-size:16px}
