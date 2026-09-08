@@ -26,7 +26,7 @@ class AdminOverview extends StatsOverviewWidget
         }
 
         return [
-            Stat::make('Active staff', User::query()->where('status', 'active')->role('Staff')->count())
+            Stat::make('Active staff', User::query()->where('status', 'active')->role('Staff', 'web')->count())
                 ->description('Staff accounts currently active')
                 ->icon('heroicon-o-users'),
             Stat::make('Open tasks', (clone $tasks)->whereNot('status', 'done')->count())

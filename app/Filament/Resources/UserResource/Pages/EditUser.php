@@ -62,11 +62,7 @@ class EditUser extends EditRecord
             $role = 'Staff';
         }
 
-        $this->record->syncRoles([$role]);
-        $effectiveBranches = $branches ?: array_filter([(int) $this->record->primary_branch_id]);
-        $this->record->branches()->sync($effectiveBranches);
-
-        $newBranches = collect($effectiveBranches)->sort()->values()->all();
+        $this->record->syncRoles([\Spatie\Permission\Models\Role::findByName($role, 'web')]);
 
         if ($this->previousRole !== $role || $this->previousBranches !== $newBranches) {
             activity('users')

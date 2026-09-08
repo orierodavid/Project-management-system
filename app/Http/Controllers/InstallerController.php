@@ -77,7 +77,7 @@ class InstallerController extends Controller
                     'primary_branch_id' => DB::table('branches')->value('id'),
                 ],
             );
-            $admin->syncRoles(['Super Admin']);
+            $admin->syncRoles([\Spatie\Permission\Models\Role::findByName('Super Admin', 'web')]);
 
             Setting::updateOrCreate([], [
                 'company_name' => $data['app_name'],

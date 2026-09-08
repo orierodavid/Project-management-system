@@ -46,11 +46,7 @@ class CreateUser extends CreateRecord
             $role = 'Staff';
         }
 
-        $this->record->syncRoles([$role]);
-        $effectiveBranches = $branches ?: array_filter([(int) $this->record->primary_branch_id]);
-        $this->record->branches()->sync($effectiveBranches);
-
-        activity('users')
+        $this->record->syncRoles([\Spatie\Permission\Models\Role::findByName($role, 'web')]);
             ->performedOn($this->record)
             ->withProperties([
                 'role' => ['before' => null, 'after' => $role],
